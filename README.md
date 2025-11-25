@@ -88,8 +88,8 @@ Histórico de mensagens enviadas.
 
 #como rodar o projeto
 
-###instalar depenências
+### Instalar depenências
 - npm isntall
 
-###Rodar aplicação 
+### Rodar aplicação 
 - npm run dev
