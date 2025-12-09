@@ -36,20 +36,26 @@ export default function HistoryItem({ row }: Props) {
   const d = new Date(row.data_envio);
   const hora = format(d, "dd/MM HH:mm", { locale: ptBR });
 
+  const clientName = row.clientes?.Cliente || "—";
+  const title = row.mensagens?.titulo || "—";
+
   return (
     <li className="rounded-lg border border-slate-200 p-3 hover:bg-slate-50">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
+          <div className="text-xs font-semibold text-slate-700 truncate">
+            {clientName}
+          </div>
           <div className="mt-0.5 text-[12px] text-slate-500">
             {row.to_phone}
           </div>
         </div>
 
-        <StatusPill status={row.status_entrega} />
+        {row.status_entrega && <StatusPill status={row.status_entrega} />}
       </div>
 
       <div className="mt-2 text-[12px] text-slate-600">
-        <span className="font-medium">{row.mensagens?.titulo || "—"}</span>
+        <span className="font-medium">{title}</span>
       </div>
 
       <div className="mt-1 text-[11px] text-slate-500">{hora}</div>

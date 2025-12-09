@@ -1,3 +1,4 @@
+// components/history/HistoryFilters.tsx
 "use client";
 
 import { Listbox } from "@headlessui/react";
@@ -14,6 +15,7 @@ const statusOptions = [
   { value: "sent", label: "Enviado" },
   { value: "failed", label: "Falhou" },
   { value: "read", label: "Lido" },
+  { value: "delivered", label: "Entregue" },
 ];
 
 export default function HistoryFilters({
@@ -26,9 +28,12 @@ export default function HistoryFilters({
 
   return (
     <div className="bg-white p-4 flex flex-col md:flex-row gap-4 items-start md:items-end rounded-2xl">
-      {/* Busca */}
+      {/* Campo de busca (cliente, telefone, título) */}
       <div className="flex-1">
-        <label htmlFor="search" className="block text-sm font-medium text-gray-600 mb-1">
+        <label
+          htmlFor="search"
+          className="block text-sm font-medium text-gray-600 mb-1"
+        >
           Buscar
         </label>
         <input
@@ -41,13 +46,16 @@ export default function HistoryFilters({
         />
       </div>
 
-      {/* Filtro de status */}
+      {/* Filtro de status (apenas histórico, não fila) */}
       <div className="w-full md:w-48">
         <label className="block text-sm font-medium text-gray-600 mb-1">
           Status
         </label>
 
-        <Listbox value={selected} onChange={(opt) => setStatusFilter(opt.value)}>
+        <Listbox
+          value={selected}
+          onChange={(opt) => setStatusFilter(opt.value)}
+        >
           <div className="relative">
             <Listbox.Button className="w-full border border-gray-300 rounded-md p-2 text-left text-gray-600 focus:ring-2 focus:ring-[#b6f01f]">
               {selected.label}
@@ -60,7 +68,9 @@ export default function HistoryFilters({
                   value={opt}
                   className={({ active }) =>
                     `cursor-pointer p-2 text-sm ${
-                      active ? "bg-[#b6f01f] text-slate-900" : "text-slate-700"
+                      active
+                        ? "bg-[#b6f01f] text-slate-900"
+                        : "text-slate-700"
                     }`
                   }
                 >

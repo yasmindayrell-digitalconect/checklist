@@ -10,24 +10,40 @@ type Props = {
   rows: HistoryRow[];
 };
 
-function toDate(d: string) {
+/**
+ * Converte um HistoryRow em Date.
+ * - Usa data_envio se existir
+ * - Senão, usa created_at
+ * - Se nada existir, volta Epoch (1970) para cair no final da lista
+ */
+function getRowDate(row: HistoryRow): Date {
+  const raw = (row.data_envio || row.created_at || "").toString().trim();
+
+  if (!raw) {
+    return new Date(0); // fallback bem antigo
+  }
+
   // aceita "2025-11-01" ou ISO completo
-  return d.length <= 10 ? parseISO(`${d}T00:00:00`) : new Date(d);
+  if (raw.length <= 10) {
+    return parseISO(`${raw}T00:00:00`);
+  }
+
+  return new Date(raw);
 }
 
 export default function HistoryTable({ rows }: Props) {
   // ordena do envio mais recente para o mais antigo
   const sorted = [...rows].sort((a, b) => {
-    const da = toDate(a.data_envio).getTime();
-    const db = toDate(b.data_envio).getTime();
+    const da = getRowDate(a).getTime();
+    const db = getRowDate(b).getTime();
     return db - da;
   });
 
-  // agrupa por dia 
+  // agrupa por dia
   const groups = new Map<string, HistoryRow[]>();
 
   for (const r of sorted) {
-    const d = toDate(r.data_envio);
+    const d = getRowDate(r);
     const key = format(d, "yyyy-MM-dd"); // chave do grupo
 
     if (!groups.has(key)) {
@@ -51,7 +67,7 @@ export default function HistoryTable({ rows }: Props) {
   }
 
   return (
-    <div className=" overflow-x-auto overflow-y-hidden pb-2">
+    <div className="overflow-x-auto overflow-y-hidden pb-2">
       <div className="flex gap-4 min-w-max">
         {days.map(([dateKey, items]) => {
           const d = parseISO(dateKey);

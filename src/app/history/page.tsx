@@ -1,19 +1,36 @@
 // app/history/page.tsx
-export const dynamic = "force-dynamic"; 
+export const dynamic = "force-dynamic";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import HistoryClient from "@/components/history/HistoryClient";
+import type { HistoryRow, QueueRow } from "@/components/history/types";
 
 export default async function HistoryPage() {
-  const { data, error } = await supabaseAdmin
+  // carrega histórico de envios (já realizados)
+  const { data: history, error: historyError } = await supabaseAdmin
     .from("envios")
-    .select("*, clientes(Cliente), mensagens(titulo)") // junta dados úteis
+    .select("*, clientes(Cliente), mensagens(titulo)")
     .order("data_envio", { ascending: false });
 
-  if (error) {
-    console.error("❌ Error loading history:", error);
-    return <p>Erro ao carregar histórico.</p>;
+  if (historyError) {
+    console.error("❌ Error loading history:", historyError);
   }
 
-  return <HistoryClient history={data || []} />;
+  // carrega fila de envios (apenas pendentes ou processando)
+  const { data: queue, error: queueError } = await supabaseAdmin
+    .from("fila_envio")
+    .select("*, clientes(Cliente), mensagens(titulo)")
+    .in("status", ["pending", "processing"])
+    .order("created_at", { ascending: false });
+
+  if (queueError) {
+    console.error("❌ Error loading queue:", queueError);
+  }
+
+  return (
+    <HistoryClient
+      history={(history || []) as HistoryRow[]}
+      queue={(queue || []) as QueueRow[]}
+    />
+  );
 }
