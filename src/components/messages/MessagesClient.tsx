@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from "react";
-import MessageForm from "./MessageForm";
 import type { Message } from "./types";
 import MessagesTable from "./MessagesTable";
 
