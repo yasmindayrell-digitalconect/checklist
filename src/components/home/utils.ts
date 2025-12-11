@@ -16,5 +16,3 @@ export function cleanName(raw: string): string {
   const full_name = s.split(" ");
   return full_name.slice(0,2).join(" ")
 }
-
-const onlyDigits = (s?: string | null) => (s || "").replace(/\D/g, "");

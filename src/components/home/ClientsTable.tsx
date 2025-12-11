@@ -62,15 +62,24 @@ export default function ClientsTable({
 
       <div className="max-h-80 overflow-auto">
         <table className="w-full text-sm text-gray-600 table-fixed">
+
+            <colgroup>
+              <col className="w-10" />                    {/* checkbox */}
+              <col className="w-[40%]" />                 {/* Nome */}
+              <col className="w-[15%]" />                 {/* Limite */}
+              <col className="w -[15%]" />                 {/* Última interação */}
+              <col className="w-[15%]" />                 {/* Vendedor */}
+              <col className="w-[15%]" />                 {/* Status */}
+            </colgroup>
           <thead className="bg-gray-100 sticky top-0 z-10">
             <tr>
               <th className="p-2 w-10" aria-label="Selecionar cliente"></th>
-              <th className="p-2 text-left w-80">Nome</th>
+              <th className="p-2 text-left">Nome</th>
               <th className="p-2 text-left">Limite de Crédito</th>
               {/* <th className="p-2 text-left">Última compra</th> */}
               <th className="p-2 text-left">Última interação</th>
               <th className="p-2 text-left">Vendedor</th>
-              <th className="p-2 text-left w-20">Status</th>
+              <th className="p-2 text-left">Status</th>
             </tr>
           </thead>
           <tbody>
