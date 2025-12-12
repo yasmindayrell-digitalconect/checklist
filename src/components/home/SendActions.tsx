@@ -179,7 +179,6 @@ export default function SendActions({
     <div className="flex items-center gap-4">
       <button
         onClick={() => {
-          {handleSendBatch}
           setIsSendingOpen(true);
         }}
         disabled={disabled}

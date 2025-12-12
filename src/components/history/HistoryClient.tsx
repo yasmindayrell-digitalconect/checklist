@@ -49,7 +49,7 @@ export default function HistoryClient({ history, queue }: Props) {
 
           {/* layout principal: fila à esquerda, histórico à direita */}
           <div className="flex flex-col gap-6 lg:flex-row">
-            <div className="w-full lg:w-80">
+            <div className="w-full lg:w-70">
               <QueuePanel queue={queue} />
             </div>
 
