@@ -16,47 +16,53 @@ type Props = {
  * - Senão, usa created_at
  * - Se nada existir, volta Epoch (1970) para cair no final da lista
  */
-function getRowDate(row: HistoryRow): Date {
-  const raw = (row.data_envio || row.created_at || "").toString().trim();
-
-  if (!raw) {
-    return new Date(0); // fallback bem antigo
+function getRowKey(row: HistoryRow): string {
+  // ✅ prioridade: created_at (timestamp real)
+  const created = (row.created_at || "").toString().trim();
+  if (created) {
+    const d = new Date(created);
+    if (!Number.isNaN(d.getTime())) {
+      // ✅ dia LOCAL (igual o HistoryItem exibe)
+      return format(d, "yyyy-MM-dd");
+    }
   }
 
-  // aceita "2025-11-01" ou ISO completo
-  if (raw.length <= 10) {
-    return parseISO(`${raw}T00:00:00`);
-  }
+  // ✅ fallback: data_envio (date-only)
+  const day = (row.data_envio || "").toString().trim();
+  if (day && day.length <= 10) return day; // "YYYY-MM-DD"
 
-  return new Date(raw);
+  // ✅ fallback seguro (sempre parseável)
+  return "1970-01-01";
 }
 
+
+
+function getRowSortTs(row: HistoryRow): number {
+  if (row.created_at) {
+    const t = new Date(row.created_at).getTime();
+    if (!Number.isNaN(t)) return t;
+  }
+
+  if (row.data_envio) return parseISO(`${row.data_envio}T00:00:00`).getTime();
+
+  return new Date("1970-01-01T00:00:00Z").getTime();
+}
 export default function HistoryTable({ rows }: Props) {
   // ordena do envio mais recente para o mais antigo
-  const sorted = [...rows].sort((a, b) => {
-    const da = getRowDate(a).getTime();
-    const db = getRowDate(b).getTime();
-    return db - da;
-  });
+  const sorted = [...rows].sort((a, b) => getRowSortTs(b) - getRowSortTs(a));
 
   // agrupa por dia
+
   const groups = new Map<string, HistoryRow[]>();
-
   for (const r of sorted) {
-    const d = getRowDate(r);
-    const key = format(d, "yyyy-MM-dd"); // chave do grupo
-
-    if (!groups.has(key)) {
-      groups.set(key, []);
-    }
+    const key = getRowKey(r);
+    if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(r);
   }
 
-  // dias ordenados do mais recente pro mais antigo
   const days = Array.from(groups.entries()).sort(
     ([a], [b]) => parseISO(b).getTime() - parseISO(a).getTime()
   );
-
   // nenhum envio
   if (days.length === 0) {
     return (

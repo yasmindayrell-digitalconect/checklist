@@ -64,13 +64,11 @@ async function saveEnvio({
   statusOverride?: string;
 }) {
   const waMessageId = parsed?.messages?.[0]?.id ?? null;
-  const today = new Date().toISOString().slice(0, 10);
 
   await supabaseAdmin.from("envios").insert([
     {
       id_cliente: clientId,
       id_mensagem: messageId,
-      data_envio: today,
       status_entrega: statusOverride || (ok ? "sent" : "failed"),
       wa_message_id: waMessageId,
       to_phone: to,

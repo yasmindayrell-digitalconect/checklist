@@ -10,7 +10,7 @@ export default async function HistoryPage() {
   const { data: history, error: historyError } = await supabaseAdmin
     .from("envios")
     .select("*, clientes(Cliente), mensagens(titulo)")
-    .order("data_envio", { ascending: false });
+    .order("created_at", { ascending: false });
 
   if (historyError) {
     console.error("❌ Error loading history:", historyError);

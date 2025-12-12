@@ -33,8 +33,18 @@ type Props = {
 };
 
 export default function HistoryItem({ row }: Props) {
-  const d = new Date(row.data_envio);
-  const hora = format(d, "dd/MM HH:mm", { locale: ptBR });
+  const raw = row.created_at || row.data_envio; // prioriza timestamp real
+
+  let hora = "—";
+  if (row.created_at) {
+    // timestamp → pode mostrar hora
+    const d = new Date(row.created_at);
+    hora = format(d, "dd/MM HH:mm", { locale: ptBR });
+  } else if (row.data_envio) {
+    // date-only → NÃO mostra HH:mm
+    const d = new Date(`${row.data_envio}T00:00:00`);
+    hora = format(d, "dd/MM", { locale: ptBR });
+  }
 
   const clientName = row.clientes?.Cliente || "—";
   const title = row.mensagens?.titulo || "—";
