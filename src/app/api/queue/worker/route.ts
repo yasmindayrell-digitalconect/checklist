@@ -55,6 +55,7 @@ async function saveEnvio({
   to,
   parsed,
   statusOverride,
+  dedupeKey,
 }: {
   ok: boolean;
   clientId: number;
@@ -62,6 +63,7 @@ async function saveEnvio({
   to: string;
   parsed: any;
   statusOverride?: string;
+  dedupeKey?: string;
 }) {
   const waMessageId = parsed?.messages?.[0]?.id ?? null;
 
@@ -72,6 +74,7 @@ async function saveEnvio({
       status_entrega: statusOverride || (ok ? "sent" : "failed"),
       wa_message_id: waMessageId,
       to_phone: to,
+      dedupe_key: dedupeKey ?? null, // ✅ novo (precisa da coluna no DB)
       error_message: ok ? null : parsed,
     },
   ]);
@@ -115,9 +118,46 @@ export async function GET() {
     const clientId = Number(job.id_cliente);
     const messageId = Number(job.id_mensagem);
     const to = job.to_phone;
+
     const variablesArray: string[] = Array.isArray(job.payload_raw?.variables)
       ? job.payload_raw.variables.map(String)
       : [];
+
+    // ✅ DEDUPE KEY (por dia + template + telefone)
+    const today = new Date().toISOString().slice(0, 10);
+    const dedupeKey: string = job.dedupe_key || `${messageId}:${to}:${today}`;
+
+    // ✅ Bloqueio de duplicado: se já enviou hoje para esse número e mensagem, não manda de novo
+    const { data: already } = await supabaseAdmin
+      .from("envios")
+      .select("id_envio,status_entrega")
+      .eq("dedupe_key", dedupeKey)
+      .in("status_entrega", ["sent", "delivered", "read"])
+      .limit(1);
+
+    if (already && already.length > 0) {
+      await saveEnvio({
+        ok: false,
+        clientId,
+        messageId,
+        to,
+        parsed: { error: "Duplicate blocked (already sent today)." },
+        statusOverride: "blocked_duplicate",
+        dedupeKey,
+      });
+
+      await supabaseAdmin
+        .from("fila_envio")
+        .update({ status: "done" })
+        .eq("id_fila", job.id_fila);
+
+      log.warn("Duplicate blocked", {
+        id_fila: job.id_fila,
+        dedupeKey,
+      });
+
+      return NextResponse.json({ ok: true, skipped: true, reason: "duplicate" });
+    }
 
     // 2) Buscar template
     const { data: template } = await supabaseAdmin
@@ -177,8 +217,8 @@ export async function GET() {
       );
     }
 
-    // 👉 NOVO: se cliente estiver inativo, não envia nada
-    if (cliente.active === false) {
+    // 👉 se cliente estiver inativo, não envia nada
+    if (cliente.ativo === false) {
       const errorObj = {
         error: "Client is inactive and cannot receive messages.",
       };
@@ -190,6 +230,7 @@ export async function GET() {
         to,
         parsed: errorObj,
         statusOverride: "blocked_inactive",
+        dedupeKey,
       });
 
       await supabaseAdmin
@@ -214,8 +255,7 @@ export async function GET() {
       .select("*")
       .eq("id_cliente", clientId);
 
-    const nomeContato =
-      contatos?.[0]?.nome_contato || cliente?.Cliente || "";
+    const nomeContato = contatos?.[0]?.nome_contato || cliente?.Cliente || "";
 
     dynamicVars = {
       nome: firstName(nomeContato),
@@ -304,13 +344,14 @@ export async function GET() {
       parsed = safeJSON(raw);
     }
 
-    // grava em envios
+    // grava em envios (inclui dedupeKey)
     await saveEnvio({
       ok: resp.ok,
       clientId,
       messageId,
       to,
       parsed,
+      dedupeKey,
     });
 
     // atualiza job

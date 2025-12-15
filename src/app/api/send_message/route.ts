@@ -5,12 +5,6 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/**
- * This route does NOT send messages directly.
- * It creates queue jobs to be processed by the queue worker.
- */
-
-// mantém exatamente como estava
 const normalizePhone = (input?: string | null): string => {
   if (!input) return "";
 
@@ -47,7 +41,6 @@ export async function POST(req: Request) {
       ? body.variables.map(String)
       : [];
 
-    // validações básicas
     if (!to) {
       return NextResponse.json(
         { success: false, error: "Campo 'to' vazio ou inválido." },
@@ -62,7 +55,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 👉 NOVO: checa se o cliente está ativo antes de enfileirar
+    // checa se cliente está ativo
     const { data: cliente, error: clienteError } = await supabaseAdmin
       .from("clientes")
       .select("ativo")
@@ -78,8 +71,8 @@ export async function POST(req: Request) {
     }
 
     if (cliente.ativo === false) {
-      // 🔎 registra no histórico que o envio foi bloqueado por cliente inativo
       const today = new Date().toISOString().slice(0, 10);
+      const dedupe_key = `${id_mensagem}:${to}:${today}`;
 
       await supabaseAdmin.from("envios").insert([
         {
@@ -89,6 +82,7 @@ export async function POST(req: Request) {
           status_entrega: "blocked_inactive",
           wa_message_id: null,
           to_phone: to,
+          dedupe_key,
           error_message: JSON.stringify({
             error: "Client is inactive and cannot receive messages.",
           }),
@@ -96,25 +90,39 @@ export async function POST(req: Request) {
       ]);
 
       return NextResponse.json(
-        {
-          success: false,
-          error: "Client is inactive and cannot receive messages.",
-        },
+        { success: false, error: "Client is inactive and cannot receive messages." },
         { status: 400 }
       );
     }
 
-    // 👉 Se está ativo, segue o fluxo normal: cria job na fila
+    // ✅ dedupe por dia + template + telefone
+    const today = new Date().toISOString().slice(0, 10);
+    const dedupe_key = `${id_mensagem}:${to}:${today}`;
+
     const { error } = await supabaseAdmin.from("fila_envio").insert([
       {
         id_cliente,
         id_mensagem,
         to_phone: to,
         payload_raw: { variables },
+        dedupe_key,
       },
     ]);
 
     if (error) {
+      // 👇 Postgres unique violation
+      if ((error as any).code === "23505") {
+        return NextResponse.json(
+          {
+            success: true,
+            queued: false,
+            duplicate: true,
+            message: "Já existe um envio enfileirado para este número (hoje) com essa mensagem.",
+          },
+          { status: 200 }
+        );
+      }
+
       console.error("[queue] Queue insert error:", error);
       return NextResponse.json(
         { success: false, error: "Queue insert failed." },

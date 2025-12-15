@@ -9,10 +9,8 @@ type Props = {
   onToggle: (id: string | number) => void;
   allFilteredSelected: boolean;
   onToggleSelectAll: () => void;
-
-  // vindo do HomeClient
-  phoneByClientId: Record<string, string>; // clientKey -> phoneNorm
-  selectedPhoneOwner: Map<string, string>; // phoneNorm -> clientKey (dono)
+  phoneByClientId: Record<string, string>;
+  selectedPhoneOwner: Map<string, string>;
 };
 
 export default function ClientsTable({
@@ -27,7 +25,6 @@ export default function ClientsTable({
   const masterRef = useRef<HTMLInputElement>(null);
   const checkedAll = Boolean(allFilteredSelected);
 
-  // conta apenas clientes ATIVOS selecionados
   const selectedCount = useMemo(
     () =>
       clients.filter((c) => c.ativo && !!selectedMap[keyOf(c.id_cliente)]).length,
@@ -66,15 +63,7 @@ export default function ClientsTable({
 
       <div className="max-h-80 overflow-auto">
         <table className="w-full text-sm text-gray-600 table-fixed">
-          <colgroup>
-            <col className="w-7" />        {/* checkbox */}
-            <col className="w-[25%]" />    {/* Nome */}
-            <col className="w-[15%]" />    {/* Limite */}
-            <col className="w-[15%]" />    {/* Última compra */}
-            <col className="w-[15%]" />    {/* Última interação */}
-            <col className="w-[15%]" />    {/* Vendedor */}
-            <col className="w-[15%]" />    {/* Status */}
-          </colgroup>
+          <colgroup><col className="w-7" /><col className="w-[25%]" /><col className="w-[15%]" /><col className="w-[15%]" /><col className="w-[15%]" /><col className="w-[15%]" /><col className="w-[15%]" /></colgroup>
 
           <thead className="bg-gray-100 sticky top-0 z-10">
             <tr>
@@ -94,7 +83,7 @@ export default function ClientsTable({
               const checked = !!selectedMap[k];
               const isActive = c.ativo === true;
 
-              // ⚠️ NÃO MEXI NA SUA LÓGICA DE DATAS
+              // NÃO MEXI NA SUA LÓGICA DE DATAS
               const diasCompra = daysSince(c.data_ultima_compra);
               const textoCompra = Number.isFinite(diasCompra)
                 ? `${diasCompra} dias`
@@ -109,7 +98,6 @@ export default function ClientsTable({
                 <span className="text-gray-400 italic">Nunca</span>
               );
 
-              // dedupe por telefone (vem do HomeClient)
               const phoneNorm = phoneByClientId[k] || "";
               const ownerKey = phoneNorm ? selectedPhoneOwner.get(phoneNorm) : undefined;
 
