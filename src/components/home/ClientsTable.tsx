@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 import { useEffect, useMemo, useRef } from "react";
 import { Client, SelectedMap } from "./types";
 import {keyOf, cleanName, daysFrom } from "./utils";
@@ -63,7 +64,7 @@ export default function ClientsTable({
 
       <div className="max-h-80 overflow-auto">
         <table className="w-full text-sm text-gray-600 table-fixed">
-          <colgroup><col className="w-7" /><col className="w-[25%]" /><col className="w-[15%]" /><col className="w-[15%]" /><col className="w-[15%]" /><col className="w-[15%]" /><col className="w-[15%]" /></colgroup>
+          <colgroup><col className="w-5" /><col className="w-[32%]" /><col className="w-[15%]" /><col className="w-[10%]" /><col className="w-[10%]" /><col className="w-[17%]" /><col className="w-7" /></colgroup>
 
           <thead className="bg-gray-100 sticky top-0 z-10">
             <tr>
@@ -73,7 +74,7 @@ export default function ClientsTable({
               <th className="p-2 text-left">Última compra</th>
               <th className="p-2 text-left">Última interação</th>
               <th className="p-2 text-left">Vendedor</th>
-              <th className="p-2 text-left">Status</th>
+              <th className="p-2 w-10 text-left">Status</th>
             </tr>
           </thead>
 

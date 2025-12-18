@@ -1,9 +1,13 @@
+import { unstable_noStore as noStore } from "next/cache"
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import HomeClient from "@/components/home/HomeClient";
 
 export default async function Page() {
-  const { data: clients, error } = await supabaseAdmin.from("clientes").select("*");
   const { data: messages } = await supabaseAdmin.from("mensagens").select("*");
+  
+  noStore();
+  const { data: clients, error } = await supabaseAdmin.from("clientes").select("*");
+
   const { data: contacts  } = await supabaseAdmin.from("contatos_cliente").select("*");
 
   if (error) {
