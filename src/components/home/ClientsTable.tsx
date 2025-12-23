@@ -1,5 +1,5 @@
 "use client";
-export const dynamic = "force-dynamic";
+
 import { useEffect, useMemo, useRef } from "react";
 import { Client, SelectedMap } from "./types";
 import {keyOf, cleanName, daysFrom } from "./utils";
