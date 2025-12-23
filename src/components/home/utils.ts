@@ -25,25 +25,9 @@ export const normalizePhone = (input?: string | null) => {
 export function daysFrom(value?: string | number | Date | null) {
   if (value === null || value === undefined || value === "") return Infinity;
 
-  // já veio como número de dias
-  if (typeof value === "number" && Number.isFinite(value)) return Math.floor(value);
-
-  if (typeof value === "string") {
-    // tenta extrair dias de string ("37", "37 dias", "37,0")
-    const m = value.match(/-?\d+(?:[.,]\d+)?/);
-    if (m) {
-      const n = Number(m[0].replace(",", "."));
-      if (Number.isFinite(n)) return Math.floor(n);
-    }
-
-    // tenta como data
-    const d = new Date(value);
-    if (!isNaN(d.getTime())) {
-      const diffMs = Date.now() - d.getTime();
-      return Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    }
-
-    return Infinity;
+  // número direto (ex: ultima_compra já como number)
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return Math.floor(value);
   }
 
   // Date
@@ -52,7 +36,34 @@ export function daysFrom(value?: string | number | Date | null) {
     return Math.floor(diffMs / (1000 * 60 * 60 * 24));
   }
 
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+
+    // 🔹 1️⃣ tenta como DATA primeiro
+    // normaliza formato do Postgres: "2025-12-05 14:23:22+00"
+    const normalized =
+      trimmed.includes(" ") && !trimmed.includes("T")
+        ? trimmed.replace(" ", "T")
+        : trimmed;
+
+    const d = new Date(normalized);
+    if (!isNaN(d.getTime())) {
+      const diffMs = Date.now() - d.getTime();
+      return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    }
+
+    // 🔹 2️⃣ só trata como número se for string NUMÉRICA PURA
+    if (/^-?\d+(?:[.,]\d+)?$/.test(trimmed)) {
+      const n = Number(trimmed.replace(",", "."));
+      if (Number.isFinite(n)) return Math.floor(n);
+    }
+
+    return Infinity;
+  }
+
   return Infinity;
 }
+
+
 
 
