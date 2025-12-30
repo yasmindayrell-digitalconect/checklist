@@ -1,16 +1,33 @@
 // components/Sidebar.tsx
 "use client";
+
 import Link from "next/link";
-import { MessageSquare, Zap, Menu, History, X, MessageCircle, User2, } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { useState, FormEvent } from "react";
+import {
+  Zap,
+  Menu,
+  X,
+  MessageCircle,
+  User2,
+  LogOut,
+} from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useMemo, useState, FormEvent } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 type FeedbackType = "bug" | "feature" | "other";
 
+type NavItem = {
+  href: string;
+  label: string; // UI pode ser PT
+  icon: any;
+};
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
+
   const [isDesktopOpen, setIsDesktopOpen] = useState(true);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // feedback state
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -21,12 +38,18 @@ export default function Sidebar() {
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [feedbackSuccess, setFeedbackSuccess] = useState<string | null>(null);
 
-  const navItems = [
-    { href: "/", label: "Triggers", icon: Zap },
-    { href: "/messages", label: "Mensagens", icon: MessageSquare },
-    { href: "/history", label: "Histórico", icon: History },
-    { href: "/clients", label: "Clientes", icon: User2 },
-  ];
+  const navItems: NavItem[] = useMemo(
+    () => [
+      { href: "/", label: "Checklist", icon: Zap },
+      { href: "/followUp", label: "Acompanhar", icon: User2 },
+    ],
+    []
+  );
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname?.startsWith(href);
+  };
 
   async function handleFeedbackSubmit(e: FormEvent) {
     e.preventDefault();
@@ -45,148 +68,81 @@ export default function Sidebar() {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("Falha ao enviar feedback.");
-      }
+      if (!res.ok) throw new Error("Falha ao enviar feedback.");
 
       setFeedbackSuccess("Feedback enviado com sucesso. Obrigado!");
       setFeedbackMessage("");
     } catch (err: any) {
-      setFeedbackError(err.message ?? "Erro ao enviar feedback.");
+      setFeedbackError(err?.message ?? "Erro ao enviar feedback.");
     } finally {
       setSending(false);
     }
   }
 
+  async function handleSwitchUser() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    logout(); // limpa localStorage/state
+    router.replace("/select-user");
+  }
   return (
     <>
-      {/* TOPBAR MOBILE (apenas mobile) */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-linear-to-r from-[#2323ff] to-[#2323ff] text-white">
-        <div className="text-2xl font-bold">Painel</div>
-        <button onClick={() => setIsMobileOpen(true)} aria-label="Abrir menu">
-          <Menu />
-        </button>
-      </div>
-
-      {/* MOBILE: backdrop + drawer */}
-      {isMobileOpen && (
-        <div className="md:hidden fixed inset-0 z-40">
-          {/* backdrop */}
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setIsMobileOpen(false)}
-          />
-          {/* drawer */}
-          <aside className="relative z-50 h-full w-64 bg-linear-to-b from-blue-700 to-blue-500 text-white p-6 flex flex-col">
-            <div className="mb-6 flex items-center justify-between">
-              <h1 className="text-xl font-bold tracking-tight">Painel</h1>
-              <button
-                onClick={() => setIsMobileOpen(false)}
-                aria-label="Fechar menu"
-              >
-                <X />
-              </button>
-            </div>
-
-            <nav className="flex-1">
-              <ul className="flex flex-col gap-4">
-                {navItems.map(({ href, label, icon: Icon }) => (
-                  <li key={href}>
-                    <Link
-                      href={href}
-                      onClick={() => setIsMobileOpen(false)}
-                      className={`flex items-center gap-3 p-2 rounded ${
-                        pathname === href
-                          ? "bg-blue-100/40 font-semibold"
-                          : "hover:bg-blue-100/20"
-                      }`}
-                    >
-                      <Icon size={18} />
-                      <span>{label}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-
-            {/* botão de feedback no mobile */}
-            <button
-              onClick={() => {
-                setIsMobileOpen(false);
-                setIsFeedbackOpen(true);
-              }}
-              className="mt-4 flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm hover:bg-white/20 transition"
-            >
-              <MessageCircle size={16} />
-              <span>Enviar feedback</span>
-            </button>
-
-            <div className="text-sm text-blue-100/80 mt-4">
-              <div>v. 1.0</div>
-            </div>
-          </aside>
-        </div>
-      )}
-
       {/* DESKTOP SIDEBAR */}
       <aside
-        className={`
-          hidden md:flex flex-col h-full
-          bg-linear-to-b from-[#2323ff] to-[#0f0f8b] text-white
-          p-4 transition-all duration-300
-          ${isDesktopOpen ? "w-50" : "w-18"}
-        `}
+        className={[
+          "hidden md:flex flex-col h-[calc(100vh-64px)]", // considera header fixo com pt-16
+          "bg-linear-to-b from-[#2323ff] to-[#0f0f8b] text-white",
+          "p-4 transition-all duration-300",
+          isDesktopOpen ? "w-45 lg:w-56" : "w-20",
+        ].join(" ")}
       >
-        <div className="flex flex-row justify-between">
-          {/* header */}
+        {/* header */}
+        <div className="flex items-start justify-between gap-3">
           <div
-            className={`overflow-hidden transition-all ${
-              isDesktopOpen ? "opacity-100 max-h-20" : "opacity-0 max-h-0"
-            }`}
+            className={[
+              "overflow-hidden transition-all",
+              isDesktopOpen ? "opacity-100 max-h-20" : "opacity-0 max-h-0",
+            ].join(" ")}
           >
             <h1 className="text-2xl font-bold tracking-tight">Painel</h1>
+            <p className="text-sm text-blue-200/80 mt-1">Gerencie seus contatos</p>
           </div>
 
-          {/* botão de toggle */}
           <button
             onClick={() => setIsDesktopOpen((v) => !v)}
-            className="self-end rounded-lg bg-blue-600/80 p-1.5 hover:bg-blue-500 transition"
+            className="shrink-0 rounded-lg bg-blue-600/80 p-1.5 hover:bg-blue-500 transition"
             aria-label={isDesktopOpen ? "Recolher menu" : "Expandir menu"}
+            title={isDesktopOpen ? "Recolher" : "Expandir"}
           >
             {isDesktopOpen ? <X size={18} /> : <Menu size={20} />}
           </button>
         </div>
 
-        <p
-          className={`text-sm text-blue-200/80 mt-1 mb-5  ${
-            isDesktopOpen ? "opacity-100 max-h-20" : "opacity-0 max-h-0"
-          }`}
-        >
-          Gerencie suas mensagens
-        </p>
+
+
 
         {/* navegação */}
-        <nav className="flex-1">
-          <ul className="flex flex-col gap-4">
+        <nav className="flex-1 mt-6">
+          <ul className="flex flex-col gap-2">
             {navItems.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href;
+              const active = isActive(href);
               return (
                 <li key={href}>
                   <Link
                     href={href}
-                    className={`
-                      flex items-center p-2 rounded transition-all w-full
-                      ${isDesktopOpen ? "justify-start gap-3" : "justify-center"}
-                      ${
-                        active
-                          ? "bg-[#b6f01f]  text-[#1a1a1a] opacity-85"
-                          : "hover:bg-[#b6f01f99]"
-                      }
-                    `}
+                    className={[
+                      "flex items-center rounded-xl transition-all w-full",
+                      "px-3 py-2",
+                      isDesktopOpen ? "justify-start gap-3" : "justify-center",
+                      active
+                        ? "bg-[#b6f01f] text-[#1a1a1a] opacity-90"
+                        : "hover:bg-white/10",
+                    ].join(" ")}
                   >
                     <Icon size={18} />
                     {isDesktopOpen && (
-                      <span className="whitespace-nowrap">{label}</span>
+                      <span className="whitespace-nowrap text-sm font-semibold">
+                        {label}
+                      </span>
                     )}
                   </Link>
                 </li>
@@ -195,25 +151,45 @@ export default function Sidebar() {
           </ul>
         </nav>
 
-        {/* botão feedback desktop */}
+        {/* ações */}
         <div className="mt-4 flex flex-col gap-2">
+          {/* feedback */}
           <button
-            onClick={() => setIsFeedbackOpen(true)}
-            className={`
-              flex items-center gap-2 rounded-lg px-3 py-2 text-sm
-              bg-white/10 hover:bg-white/20 transition
-              ${isDesktopOpen ? "justify-start" : "justify-center"}
-            `}
+            onClick={() => {
+              setFeedbackSuccess(null);
+              setFeedbackError(null);
+              setIsFeedbackOpen(true);
+            }}
+            className={[
+              "flex items-center gap-2 rounded-xl px-3 py-2 text-sm",
+              "bg-white/10 hover:bg-white/15 transition",
+              isDesktopOpen ? "justify-start" : "justify-center",
+            ].join(" ")}
           >
             <MessageCircle size={16} />
             {isDesktopOpen && <span>Enviar feedback</span>}
           </button>
 
+          {/* trocar usuário */}
+          <button
+            onClick={handleSwitchUser}
+            className={[
+              "flex items-center gap-2 rounded-xl px-3 py-2 text-sm",
+              "bg-white/10 hover:bg-white/15 transition",
+              isDesktopOpen ? "justify-start" : "justify-center",
+            ].join(" ")}
+          >
+            <LogOut size={16} />
+            {isDesktopOpen && <span>Trocar usuário</span>}
+          </button>
+
+          {/* versão */}
           <div
-            className={`
-              text-sm text-blue-100/80
-              transition-opacity ${isDesktopOpen ? "opacity-100" : "opacity-0"}
-            `}
+            className={[
+              "text-sm text-blue-100/80",
+              "transition-opacity",
+              isDesktopOpen ? "opacity-100" : "opacity-0",
+            ].join(" ")}
           >
             <div>v. 1.0</div>
           </div>
@@ -272,14 +248,12 @@ export default function Sidebar() {
                       key={opt.value}
                       type="button"
                       onClick={() => setFeedbackType(opt.value)}
-                      className={`
-                        rounded-full border px-3 py-1 text-xs font-medium
-                        ${
-                          feedbackType === opt.value
-                            ? "bg-[#b6f01f] border-[#b6f01f] text-[#1a1a1a]"
-                            : "border-slate-300 text-slate-600 hover:bg-slate-50"
-                        }
-                      `}
+                      className={[
+                        "rounded-full border px-3 py-1 text-xs font-medium transition",
+                        feedbackType === opt.value
+                          ? "bg-[#b6f01f] border-[#b6f01f] text-[#1a1a1a]"
+                          : "border-slate-300 text-slate-600 hover:bg-slate-50",
+                      ].join(" ")}
                     >
                       {opt.label}
                     </button>
@@ -301,9 +275,7 @@ export default function Sidebar() {
                 />
               </div>
 
-              {feedbackError && (
-                <p className="text-xs text-red-600">{feedbackError}</p>
-              )}
+              {feedbackError && <p className="text-xs text-red-600">{feedbackError}</p>}
               {feedbackSuccess && (
                 <p className="text-xs text-emerald-600">{feedbackSuccess}</p>
               )}
