@@ -1,24 +1,26 @@
-import type { AppUser } from "@/types/auth";
+// //lib/authStorage.ts
 
-const KEY = "app_user_v1";
+// import type { AppUser } from "@/types/auth";
 
-export function loadUser(): AppUser | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as AppUser;
-  } catch {
-    return null;
-  }
-}
+// const KEY = "app_user_v1";
 
-export function saveUser(user: AppUser) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(KEY, JSON.stringify(user));
-}
+// export function loadUser(): AppUser | null {
+//   if (typeof window === "undefined") return null;
+//   try {
+//     const raw = localStorage.getItem(KEY);
+//     if (!raw) return null;
+//     return JSON.parse(raw) as AppUser;
+//   } catch {
+//     return null;
+//   }
+// }
 
-export function clearUser() {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(KEY);
-}
+// export function saveUser(user: AppUser) {
+//   if (typeof window === "undefined") return;
+//   localStorage.setItem(KEY, JSON.stringify(user));
+// }
+
+// export function clearUser() {
+//   if (typeof window === "undefined") return;
+//   localStorage.removeItem(KEY);
+// }

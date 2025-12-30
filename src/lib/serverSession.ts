@@ -1,3 +1,5 @@
+//lib/serverSession.ts
+
 import { cookies } from "next/headers";
 
 export type AppRole = "seller" | "admin";

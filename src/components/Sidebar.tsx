@@ -1,31 +1,21 @@
-// components/Sidebar.tsx
 "use client";
 
 import Link from "next/link";
-import {
-  Zap,
-  Menu,
-  X,
-  MessageCircle,
-  User2,
-  LogOut,
-} from "lucide-react";
+import { Zap, Menu, X, MessageCircle, User2, LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState, FormEvent } from "react";
-import { useAuth } from "@/components/auth/AuthProvider";
 
 type FeedbackType = "bug" | "feature" | "other";
 
 type NavItem = {
   href: string;
-  label: string; // UI pode ser PT
+  label: string;
   icon: any;
 };
 
-export default function Sidebar() {
+export default function Sidebar({ sellerName }: { sellerName?: string }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAuth();
 
   const [isDesktopOpen, setIsDesktopOpen] = useState(true);
 
@@ -80,16 +70,18 @@ export default function Sidebar() {
   }
 
   async function handleSwitchUser() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    logout(); // limpa localStorage/state
+    // limpa cookie no server
+    await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
+    // vai para seleção (server vai ver cookie vazio)
     router.replace("/select-user");
+    router.refresh();
   }
+
   return (
     <>
-      {/* DESKTOP SIDEBAR */}
       <aside
         className={[
-          "hidden md:flex flex-col h-[calc(100vh-64px)]", // considera header fixo com pt-16
+          "hidden md:flex flex-col h-[calc(100vh-64px)]",
           "bg-linear-to-b from-[#2323ff] to-[#0f0f8b] text-white",
           "p-4 transition-all duration-300",
           isDesktopOpen ? "w-45 2xl:w-56" : "w-20",
@@ -105,6 +97,10 @@ export default function Sidebar() {
           >
             <h1 className="text-2xl font-bold tracking-tight">Painel</h1>
             <p className="text-sm text-blue-200/80 mt-1">Gerencie seus contatos</p>
+
+            {sellerName && (
+              <p className="mt-2 text-xs text-blue-100/80">Usuário: {sellerName}</p>
+            )}
           </div>
 
           <button
@@ -116,9 +112,6 @@ export default function Sidebar() {
             {isDesktopOpen ? <X size={18} /> : <Menu size={20} />}
           </button>
         </div>
-
-
-
 
         {/* navegação */}
         <nav className="flex-1 mt-6">
@@ -153,7 +146,6 @@ export default function Sidebar() {
 
         {/* ações */}
         <div className="mt-4 flex flex-col gap-2">
-          {/* feedback */}
           <button
             onClick={() => {
               setFeedbackSuccess(null);
@@ -170,7 +162,6 @@ export default function Sidebar() {
             {isDesktopOpen && <span>Enviar feedback</span>}
           </button>
 
-          {/* trocar usuário */}
           <button
             onClick={handleSwitchUser}
             className={[
@@ -183,7 +174,6 @@ export default function Sidebar() {
             {isDesktopOpen && <span>Trocar usuário</span>}
           </button>
 
-          {/* versão */}
           <div
             className={[
               "text-sm text-blue-100/80",
@@ -196,7 +186,7 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* MODAL DE FEEDBACK (desktop + mobile) */}
+      {/* MODAL DE FEEDBACK */}
       {isFeedbackOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-lg">
@@ -276,9 +266,7 @@ export default function Sidebar() {
               </div>
 
               {feedbackError && <p className="text-xs text-red-600">{feedbackError}</p>}
-              {feedbackSuccess && (
-                <p className="text-xs text-emerald-600">{feedbackSuccess}</p>
-              )}
+              {feedbackSuccess && <p className="text-xs text-emerald-600">{feedbackSuccess}</p>}
 
               <div className="mt-2 flex justify-end gap-3">
                 <button

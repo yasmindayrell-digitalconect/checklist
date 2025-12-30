@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useMemo } from "react";
-import { useAuth } from "@/components/auth/AuthProvider";
 
 function firstName(fullName?: string) {
   if (!fullName) return "";
@@ -10,10 +9,8 @@ function firstName(fullName?: string) {
   return cleaned.split(" ")[0] ?? "";
 }
 
-export default function Header() {
-  const { user } = useAuth();
-
-  const name = useMemo(() => firstName(user?.sellerName), [user?.sellerName]);
+export default function Header({ sellerName }: { sellerName?: string }) {
+  const name = useMemo(() => firstName(sellerName), [sellerName]);
 
   return (
     <header
@@ -35,7 +32,7 @@ export default function Header() {
         />
       </div>
 
-      {name ? (
+      {name && (
         <div className="flex items-center gap-2">
           <span className="hidden sm:inline text-xs text-white/80">
             Olá,
@@ -44,7 +41,7 @@ export default function Header() {
             {name}
           </span>
         </div>
-      ) : null}
+      )}
     </header>
   );
 }

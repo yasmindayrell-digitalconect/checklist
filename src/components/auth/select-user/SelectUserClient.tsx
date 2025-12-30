@@ -1,3 +1,5 @@
+//components\auth\select-user\SelectUserClient.tsx
+
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -14,7 +16,6 @@ function firstName(fullName?: string) {
 
 export default function SelectUserClient({ sellers }: { sellers: Seller[] }) {
   const router = useRouter();
-  const { setUser } = useAuth();
 
   async function selectSeller(s: Seller) {
     const payload = { role: "seller", sellerId: s.id, sellerName: s.nome } as const;
@@ -26,8 +27,8 @@ export default function SelectUserClient({ sellers }: { sellers: Seller[] }) {
       body: JSON.stringify(payload),
     });
 
-    setUser(payload);
     router.replace("/");
+    router.refresh(); // 👈 força SSR reler cookie
   }
 
   async function selectAdmin() {
@@ -40,8 +41,9 @@ export default function SelectUserClient({ sellers }: { sellers: Seller[] }) {
       body: JSON.stringify(payload),
     });
 
-    setUser(payload);
     router.replace("/");
+    router.refresh(); // 👈 força SSR reler cookie
+
   }
 
   return (

@@ -1,12 +1,5 @@
 import { NextResponse } from "next/server";
-
-type AppRole = "seller" | "admin";
-
-type AppUser = {
-  role: AppRole;
-  sellerId?: number;
-  sellerName: string;
-};
+import type { AppUser } from "@/types/auth";
 
 export async function POST(req: Request) {
   const body = (await req.json()) as AppUser;
@@ -21,13 +14,18 @@ export async function POST(req: Request) {
 
   const res = NextResponse.json({ ok: true });
 
-  // cookie httpOnly => server consegue ler, client não
-  res.cookies.set("app_user", JSON.stringify(body), {
+  const value = encodeURIComponent(JSON.stringify(body));
+
+  const isHttps =
+    process.env.NEXT_PUBLIC_APP_URL?.startsWith("https://") ||
+    process.env.APP_URL?.startsWith("https://");
+
+  res.cookies.set("app_user", value, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: Boolean(isHttps), // 
     path: "/",
-    maxAge: 60 * 60 * 24 * 30, // 30 dias
+    maxAge: 60 * 60 * 24 * 30,
   });
 
   return res;
