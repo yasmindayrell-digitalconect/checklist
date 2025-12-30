@@ -16,7 +16,7 @@ export default function FollowupList({ clients }: { clients: ClienteComContatos[
             key={c.id_cliente}
             client={c}
             variant="todo"
-            onMarkDone={() => alert("Aqui podemos registrar nova interação também.")}
+            onPrimary={() => alert("Aqui podemos registrar nova interação também.")}
           />
         ))
       )}

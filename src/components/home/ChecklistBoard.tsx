@@ -2,7 +2,7 @@
 
 import type { ClienteComContatos } from "@/types/crm";
 import ClientCard from "./ClientCard";
-
+import FollowupList from "@/components/followUp/FollowupList"
 type Props = {
   todo: ClienteComContatos[];
   doneToday: ClienteComContatos[];
@@ -71,6 +71,12 @@ export default function ChecklistBoard({
           )}
         </div>
       </section>
+
+      {/* <section className="rounded-2xl">
+          <FollowupList/>
+      </section> */}
+
+
     </div>
   );
 }
