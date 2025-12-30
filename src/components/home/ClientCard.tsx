@@ -40,7 +40,7 @@ export default function ClientCard({ client, variant, onPrimary }: Props) {
 
     if (contactsWithPhone.length === 1) {
       const c = contactsWithPhone[0];
-      var lower = c.nome_contato.toLocaleLowerCase()
+      let lower = c.nome_contato.toLocaleLowerCase()
       lower = lower.charAt(0).toUpperCase() + lower.slice(1)
       const msg = buildMessage(lower);
       window.open(buildWhatsAppLink(c.telefone!, msg), "_blank");
