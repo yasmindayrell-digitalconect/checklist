@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { ClienteComContatos } from "@/types/crm";
 import ChecklistBoard from "./ChecklistBoard";
-import { parseLooseDate, isInThisWeek, isSameLocalDay , parseLooseNumber} from "@/lib/dates";
+import {isInThisWeek, isSameLocalDay , parseLooseNumber} from "@/lib/dates";
 
 type Props = {
   clients: ClienteComContatos[];
