@@ -7,7 +7,7 @@ import { parseLooseNumber, formatLocalShort } from "@/lib/dates";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import ContactPickerModal from "./ContactPickerModal";
 import { getCardStatus, type BoardColumn } from "@/lib/checklistRules";
-
+import { SquareCheckBig} from "lucide-react";
 type Props = {
   client: ClienteComContatos;
   column: BoardColumn;
@@ -28,14 +28,14 @@ function statusUI(status: "danger" | "warning" | "ok") {
       return {
         stripe: "border-l-red-400",
         dot: "bg-red-400",
-        badge: "bg-red-50 text-red-700 ring-red-600/10",
+        badge: "bg-red-50 text-red-700 ring-red-600/0",
         btn: "bg-red-400 hover:bg-red-600 text-white",
       };
     case "warning":
       return {
         stripe: "border-l-amber-300",
         dot: "bg-amber-300",
-        badge: "bg-amber-50 text-amber-800 ring-amber-600/10",
+        badge: "bg-amber-50 text-amber-800 ring-amber-600/0",
         btn: "bg-amber-300 hover:bg-amber-600 text-white", // ou text-white se preferir
       };
     default:
@@ -96,7 +96,7 @@ export default function ClientCard({
   }
 
   const moneyFormatter = useMemo(() => new Intl.NumberFormat("pt-BR"), []);
-  const primaryLabel = "Marcar contatado";
+  const primaryLabel = "Feito";
   const showUndo = canUndo;
 
   return (
@@ -140,12 +140,12 @@ export default function ClientCard({
       </div>
 
       {/* Actions */}
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 justify-items-center flex gap-2">
         <button
           onClick={handleSend}
           disabled={!hasPhone}
           className={[
-            "rounded-lg px-4 py-1 text-xs font-semibold transition ml-5",
+            "rounded-lg px-15 py-1 text-xs font-semibold transition ml-5",
             "ring-1 ring-inset",
             hasPhone
               ? ui.btn
@@ -157,9 +157,11 @@ export default function ClientCard({
 
         <button
           onClick={onMarkContacted}
-          className="rounded-lg px-3 py-2 text-xs font-semibold transition bg-white text-gray-800 ring-1 ring-inset ring-gray-200 hover:bg-gray-50"
-        >
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition
+             bg-white text-gray-800 ring-1 ring-inset ring-gray-200 hover:bg-gray-50"
+>
           {primaryLabel}
+          <SquareCheckBig size={16} />
         </button>
 
         {showUndo && (

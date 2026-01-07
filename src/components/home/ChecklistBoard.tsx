@@ -23,7 +23,7 @@ export default function ChecklistBoard({
 }: Props) {
   return (
     <div className="h-full">
-      <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 xl:gap-6">
+      <div className="grid h-full grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3 xl:gap-10">
         <BoardColumn
           title="Enviar mensagem"
           subtitle="Último contato > 7 dias"
