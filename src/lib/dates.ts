@@ -2,92 +2,118 @@ function pad2(n: number) {
   return String(n).padStart(2, "0");
 }
 
+export type DateLike = string | Date | null | undefined;
+export type NumberLike = string | number | null | undefined;
+
 /**
- * Parse robusto para ultima_compra (text).
- * Aceita: "2025-12-01", "01/12/2025", "2025/12/01", "01-12-2025"
+ * Robust date parser for DB/user inputs.
+ * Accepts:
+ * - Date (already typed)
+ * - "2025-12-01"
+ * - "01/12/2025"
+ * - "2025/12/01"
+ * - "01-12-2025"
+ * - "2025-12-01 00:00:00"
+ * - ISO ("2025-12-01T00:00:00.000Z")
  */
-export function parseLooseDate(input: string | null): Date | null {
-  if (!input) return null;
+export function parseLooseDate(input: DateLike): Date | null {
+  if (input == null) return null;
 
-  const s = String(input).trim();
-  if (!s) return null;
+  // Already a Date
+  if (input instanceof Date) {
+    return Number.isNaN(input.getTime()) ? null : input;
+  }
 
-  // remove hora se vier "dd/mm/yyyy HH:mm:ss" ou "yyyy-mm-dd HH:mm:ss"
-  const onlyDate = s.split(" ")[0];
+  const raw = String(input).trim();
+  if (!raw) return null;
+
+  // Handle common "YYYY-MM-DD HH:mm:ss" by taking the date part
+  const datePart = raw.split(" ")[0];
 
   // 1) dd/mm/yyyy or dd-mm-yyyy
-  let m = onlyDate.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  let m = datePart.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
   if (m) {
-    const dd = Number(m[1]);
-    const mm = Number(m[2]);
-    const yyyy = Number(m[3]);
-
-    // cria em horário local (mais previsível pra "dias desde")
-    const d = new Date(yyyy, mm - 1, dd);
+    const day = Number(m[1]);
+    const month = Number(m[2]);
+    const year = Number(m[3]);
+    const d = new Date(year, month - 1, day);
     return Number.isNaN(d.getTime()) ? null : d;
   }
 
-  // 2) dd/mm/yy or dd-mm-yy  -> assume 20yy (ajuste se você tiver 19xx)
-  m = onlyDate.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/);
+  // 2) dd/mm/yy or dd-mm-yy -> assume 20yy
+  m = datePart.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/);
   if (m) {
-    const dd = Number(m[1]);
-    const mm = Number(m[2]);
+    const day = Number(m[1]);
+    const month = Number(m[2]);
     const yy = Number(m[3]);
-    const yyyy = 2000 + yy;
-
-    const d = new Date(yyyy, mm - 1, dd);
+    const year = 2000 + yy;
+    const d = new Date(year, month - 1, day);
     return Number.isNaN(d.getTime()) ? null : d;
   }
 
   // 3) yyyy/mm/dd or yyyy-mm-dd
-  m = onlyDate.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  m = datePart.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
   if (m) {
-    const yyyy = Number(m[1]);
-    const mm = Number(m[2]);
-    const dd = Number(m[3]);
-
-    const d = new Date(yyyy, mm - 1, dd);
+    const year = Number(m[1]);
+    const month = Number(m[2]);
+    const day = Number(m[3]);
+    const d = new Date(year, month - 1, day);
     return Number.isNaN(d.getTime()) ? null : d;
   }
 
-  // 4) ISO completo (com T, Z etc.)
-  const iso = new Date(s);
+  // 4) ISO / any JS-parsable date
+  const iso = new Date(raw);
   if (!Number.isNaN(iso.getTime())) return iso;
 
   return null;
 }
 
-export function parseLooseNumber(input: string | null): number | null {
+/**
+ * Robust number parser for DB/user inputs.
+ * Accepts:
+ * - number (already typed)
+ * - "1.234,56", "1234.56"
+ * - "15 days", "15,0"
+ *
+ * Returns integer (floor) and null for invalid/negative.
+ */
+export function parseLooseNumber(input: NumberLike): number | null {
   if (input == null) return null;
 
-  const s = String(input).trim();
-  if (!s) return null;
+  if (typeof input === "number") {
+    if (!Number.isFinite(input)) return null;
+    return input < 0 ? null : Math.floor(input);
+  }
 
-  // pega só dígitos (caso venha "15 dias" ou "15,0")
-  const normalized = s.replace(",", ".").match(/-?\d+(\.\d+)?/);
-  if (!normalized) return null;
+  const raw = String(input).trim();
+  if (!raw) return null;
 
-  const n = Number(normalized[0]);
-  if (Number.isNaN(n)) return null;
+  // remove thousand separators and normalize decimal comma
+  const normalized = raw.replace(/\./g, "").replace(",", ".");
+  const match = normalized.match(/-?\d+(\.\d+)?/);
+  if (!match) return null;
 
-  // dias devem ser >= 0
+  const n = Number(match[0]);
+  if (!Number.isFinite(n)) return null;
+
   return n < 0 ? null : Math.floor(n);
 }
 
-
+/**
+ * Difference in whole days between a date and today (local day boundaries).
+ */
 export function daysSince(date: Date | null): number | null {
   if (!date) return null;
 
   const now = new Date();
 
-  // normaliza ambos pro início do dia local (evita diferença por horas/fuso)
-  const startA = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const startB = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // normalize both to start of local day
+  const a = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const b = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  const diff = startB.getTime() - startA.getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
+  const diffMs = b.getTime() - a.getTime();
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
-
 
 export function isSameLocalDay(a: Date, b: Date) {
   return (
@@ -98,9 +124,10 @@ export function isSameLocalDay(a: Date, b: Date) {
 }
 
 export function startOfWeekLocal(d: Date) {
-  // semana começando na segunda
-  const day = d.getDay(); // 0 domingo..6 sábado
+  // week starts on Monday
+  const day = d.getDay(); // 0 Sunday..6 Saturday
   const diff = (day === 0 ? -6 : 1) - day;
+
   const start = new Date(d);
   start.setHours(0, 0, 0, 0);
   start.setDate(start.getDate() + diff);

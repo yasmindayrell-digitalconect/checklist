@@ -3,16 +3,26 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/auth/AuthProvider";
 import UserCard from "./UserCard";
 
 type Seller = { id: number; nome: string };
 
 function firstName(fullName?: string) {
   if (!fullName) return "";
+
   const cleaned = fullName.trim().replace(/\s+/g, " ");
-  return cleaned.split(" ")[0] ?? "";
+  if (!cleaned) return "";
+
+  const first = cleaned.split(" ")[0]?.toUpperCase();
+
+  // 🔹 se começar com "VENDEDOR", mostra o nome completo
+  if (first === "VENDEDOR") {
+    return cleaned;
+  }
+
+  return cleaned.split(" ")[0];
 }
+
 
 export default function SelectUserClient({ sellers }: { sellers: Seller[] }) {
   const router = useRouter();

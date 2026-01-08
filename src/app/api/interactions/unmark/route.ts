@@ -1,7 +1,6 @@
-//app\api\interactions\unmark\route.ts
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getServerSession } from "@/lib/serverSession";
+import { radarPool } from "@/lib/Db";
 
 export async function POST(req: Request) {
   const session = await getServerSession();
@@ -10,41 +9,55 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json().catch(() => null);
-  const id_cliente = body?.id_cliente;
-  const restore = body?.restore_ultima_interacao as string | null | undefined;
+  const id_cliente = Number(body?.id_cliente);
+  const restoreRaw = body?.restore_ultima_interacao as string | null | undefined;
 
   if (!id_cliente) {
     return NextResponse.json({ error: "Missing id_cliente" }, { status: 400 });
   }
 
-  // segurança: vendedor só pode alterar clientes dele
+  // segurança: seller só pode alterar cliente dele
   if (session.role === "seller") {
-    const { data: client, error: e0 } = await supabaseAdmin
-      .from("clientes")
-      .select("id_cliente,id_vendedor")
-      .eq("id_cliente", id_cliente)
-      .single();
-
-    if (e0 || !client) {
-      return NextResponse.json({ error: "Client not found" }, { status: 404 });
-    }
-
-    if (client.id_vendedor !== session.sellerId) {
+    const checkSql = `
+      SELECT 1
+      FROM public.vw_web_clientes c
+      WHERE c.cadastro_id = $1
+        AND c.vendedor_id = $2::double precision
+      LIMIT 1
+    `;
+    const check = await radarPool.query(checkSql, [id_cliente, session.sellerId]);
+    if (check.rowCount === 0) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   }
 
   // restore pode ser null (volta pra "sem interação")
-  const { data, error } = await supabaseAdmin
-    .from("clientes")
-    .update({ ultima_interacao: restore ?? null })
-    .eq("id_cliente", id_cliente)
-    .select("id_cliente, ultima_interacao")
-    .single();
+  if (!restoreRaw) {
+    await radarPool.query(
+      `DELETE FROM public.crm_interacoes_radar WHERE cliente_id = $1`,
+      [id_cliente]
+    );
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({
+      ok: true,
+      data: { cliente_id: id_cliente, ultima_interacao: null },
+    });
   }
 
-  return NextResponse.json({ ok: true, data });
+  const restoreDate = new Date(restoreRaw);
+  if (Number.isNaN(restoreDate.getTime())) {
+    return NextResponse.json({ error: "Invalid restore_ultima_interacao" }, { status: 400 });
+  }
+
+  const upsertSql = `
+    INSERT INTO public.crm_interacoes_radar (cliente_id, ultima_interacao)
+    VALUES ($1, $2)
+    ON CONFLICT (cliente_id)
+    DO UPDATE SET ultima_interacao = EXCLUDED.ultima_interacao
+    RETURNING cliente_id, ultima_interacao
+  `;
+
+  const { rows } = await radarPool.query(upsertSql, [id_cliente, restoreDate]);
+
+  return NextResponse.json({ ok: true, data: rows[0] });
 }

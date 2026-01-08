@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from "react";
 import type { ClienteComContatos, ContatoRow } from "@/types/crm";
-import { parseLooseNumber, formatLocalShort } from "@/lib/dates";
+import { parseLooseDate, daysSince, formatLocalShort } from "@/lib/dates";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import ContactPickerModal from "./ContactPickerModal";
 import { getCardStatus, type BoardColumn } from "@/lib/checklistRules";
@@ -58,16 +58,17 @@ export default function ClientCard({
   const [open, setOpen] = useState(false);
 
   const daysNoBuy = useMemo(
-    () => parseLooseNumber(client.ultima_compra),
+    () => daysSince(parseLooseDate(client.ultima_compra as any)),
     [client.ultima_compra]
   );
-
   const status = useMemo(() => getCardStatus(daysNoBuy), [daysNoBuy]);
   const ui = statusUI(status);
 
-  const lastInteraction = client.ultima_interacao
-    ? new Date(client.ultima_interacao)
-    : null;
+  const lastInteraction = useMemo(
+    () => parseLooseDate(client.ultima_interacao as any),
+    [client.ultima_interacao]
+  );
+
 
   const contactsWithPhone = useMemo(
     () => (client.contatos || []).filter((c) => !!c.telefone),

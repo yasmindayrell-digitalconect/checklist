@@ -1,3 +1,5 @@
+//types\crm.ts
+
 export type ClienteRow = {
   id_cliente: number;
   Cliente: string;

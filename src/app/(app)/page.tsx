@@ -1,46 +1,114 @@
 import { unstable_noStore as noStore } from "next/cache";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import HomeClient from "@/components/home/HomeClient";
-import type { ClienteRow, ContatoRow, ClienteComContatos } from "@/types/crm";
+import type { ClienteComContatos, ClienteRow } from "@/types/crm";
 import { getServerSession } from "@/lib/serverSession";
 import { redirect } from "next/navigation";
+import { radarPool } from "@/lib/Db";
+
+type RadarJoinedRow = {
+  cadastro_id: number;
+  nome_razao_social: string | null;
+  nome_fantasia: string | null;
+  nome_cidade: string | null;
+  nome_vendedor: string | null;
+  vendedor_id: number | null; // no banco é double precision
+  limite_credito_aprovado: number | null;
+  cliente_ativo: string | null;
+
+  ultima_interacao: Date | null; // crm_interacoes_radar
+  ultima_compra: Date | null;    // vw_web_relacao_vendas_produtos (MAX)
+};
+
+function isActiveFlag(v?: string | null) {
+  const s = (v ?? "").trim().toUpperCase();
+  if (!s) return true;
+  if (s === "N") return false;
+  if (s === "0") return false;
+  if (s === "F") return false;
+  return true;
+}
+
+function pickClientName(r: RadarJoinedRow) {
+  const nf = (r.nome_fantasia ?? "").trim();
+  if (nf) return nf;
+  const rs = (r.nome_razao_social ?? "").trim();
+  return rs || "Sem nome";
+}
 
 export default async function Page() {
   noStore();
 
-  const session = await getServerSession(); // 👈 await
-  console.log("SESSION:", session);
-
+  const session = await getServerSession();
   if (!session) redirect("/select-user");
 
-  let q = supabaseAdmin.from("clientes").select("*").eq("ativo", true);
+  const params: any[] = [];
+  let where = `1=1`;
 
+  // só ativos
+  where += ` AND COALESCE(c.cliente_ativo,'S') <> 'N'`;
+
+  // seller: filtra carteira
   if (session.role === "seller") {
-    q = q.eq("id_vendedor", session.sellerId);
+    params.push(session.sellerId);
+    where += ` AND TRUNC(c.vendedor_id)::int = $${params.length}::int`;
   }
 
-  const { data: clients, error: e1 } = await q;
-  const { data: contatos, error: e2 } = await supabaseAdmin
-    .from("contatos_cliente")
-    .select("*");
+  const sql = `
+    WITH ultima AS (
+      SELECT
+        v.cliente_id,
+        MAX(v.data_recebimento) AS ultima_compra
+      FROM public.vw_web_relacao_vendas_produtos v
+      WHERE v.data_recebimento IS NOT NULL
+      GROUP BY v.cliente_id
+    )
+    SELECT
+      c.cadastro_id,
+      c.nome_razao_social,
+      c.nome_fantasia,
+      c.nome_cidade,
+      c.nome_vendedor,
+      c.vendedor_id,
+      c.limite_credito_aprovado,
+      c.cliente_ativo,
+      i.ultima_interacao,
+      u.ultima_compra
+    FROM public.vw_web_clientes c
+    LEFT JOIN public.crm_interacoes_radar i
+      ON i.cliente_id = c.cadastro_id
+    LEFT JOIN ultima u
+      ON u.cliente_id = c.cadastro_id
+    WHERE ${where}
+    ORDER BY COALESCE(u.ultima_compra, '1900-01-01'::timestamp) ASC
+    LIMIT 5000
+  `;
 
-  if (e1 || e2) {
-    console.error(e1 || e2);
-    return <p>Error loading clients.</p>;
-  }
+  const { rows } = await radarPool.query<RadarJoinedRow>(sql, params);
 
-  const byClient = new Map<number, ContatoRow[]>();
-  (contatos as ContatoRow[] | null)?.forEach((c) => {
-    const arr = byClient.get(c.id_cliente) || [];
-    arr.push(c);
-    byClient.set(c.id_cliente, arr);
+  const enriched: ClienteComContatos[] = rows.map((r) => {
+    const idVendedor =
+      typeof r.vendedor_id === "number" ? Math.trunc(r.vendedor_id) : null;
+
+    const row: ClienteRow = {
+      id_cliente: r.cadastro_id,
+      Cliente: pickClientName(r),
+      Razao_social: (r.nome_razao_social ?? "").trim(),
+      Cidade: (r.nome_cidade ?? "").trim(),
+      Vendedor: (r.nome_vendedor ?? "").trim(),
+      Limite: Number(r.limite_credito_aprovado ?? 0),
+
+      // ✅ agora existe: data da última compra (ISO string)
+      ultima_compra: r.ultima_compra ? new Date(r.ultima_compra).toISOString() : null,
+
+      // ✅ continua existindo: última interação
+      ultima_interacao: r.ultima_interacao ? new Date(r.ultima_interacao).toISOString() : null,
+
+      id_vendedor: idVendedor,
+      ativo: isActiveFlag(r.cliente_ativo),
+    };
+
+    return { ...row, contatos: [] };
   });
-
-  const enriched: ClienteComContatos[] =
-    (clients as ClienteRow[] | null)?.map((cl) => ({
-      ...cl,
-      contatos: byClient.get(cl.id_cliente) || [],
-    })) || [];
 
   return <HomeClient clients={enriched} />;
 }
