@@ -11,6 +11,8 @@ export type ClienteRow = {
   ultima_interacao: string | null; // ISO string (timestamp tz)
   id_vendedor: number | null;
   ativo: boolean;
+  telefone?: string | null;
+  tel_celular?: string | null;
 };
 
 export type ContatoRow = {

@@ -15,6 +15,9 @@ type RadarJoinedRow = {
   limite_credito_aprovado: number | null;
   cliente_ativo: string | null;
 
+  telefone: string | null;
+  tel_celular: string | null;
+
   ultima_interacao: Date | null; // crm_interacoes_radar
   ultima_compra: Date | null;    // vw_web_relacao_vendas_produtos (MAX)
 };
@@ -71,6 +74,8 @@ export default async function Page() {
       c.vendedor_id,
       c.limite_credito_aprovado,
       c.cliente_ativo,
+      c.telefone,
+      c.tel_celular,
       i.ultima_interacao,
       u.ultima_compra
     FROM public.vw_web_clientes c
@@ -96,6 +101,9 @@ export default async function Page() {
       Cidade: (r.nome_cidade ?? "").trim(),
       Vendedor: (r.nome_vendedor ?? "").trim(),
       Limite: Number(r.limite_credito_aprovado ?? 0),
+      telefone: r.telefone ?? null,
+      tel_celular: r.tel_celular ?? null,
+
 
       // ✅ agora existe: data da última compra (ISO string)
       ultima_compra: r.ultima_compra ? new Date(r.ultima_compra).toISOString() : null,

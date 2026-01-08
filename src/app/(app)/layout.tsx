@@ -1,6 +1,6 @@
 // app/(app)/layout.tsx
 
-import Header from "@/components/Header";
+import Header from "@/components/header/Header";
 import { getServerSession } from "@/lib/serverSession";
 
 export default async function AppLayout({

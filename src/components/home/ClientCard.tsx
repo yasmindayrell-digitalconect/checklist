@@ -2,12 +2,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ClienteComContatos, ContatoRow } from "@/types/crm";
+import type { ClienteComContatos } from "@/types/crm";
 import { parseLooseDate, daysSince, formatLocalShort } from "@/lib/dates";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
-import ContactPickerModal from "./ContactPickerModal";
 import { getCardStatus, type BoardColumn } from "@/lib/checklistRules";
-import { SquareCheckBig} from "lucide-react";
+import { SquareCheckBig } from "lucide-react";
+import PhonePickerModal from "./PhonePickerModal";
+
 type Props = {
   client: ClienteComContatos;
   column: BoardColumn;
@@ -16,10 +17,8 @@ type Props = {
   onUndoContacted: () => void;
 };
 
-function buildMessage(contactName?: string) {
-  const first = (contactName || "").trim().split(" ")[0];
-  const who = first ? first : "tudo bem";
-  return `Oi, ${who}! Passando pra ver como vocês estão e se posso te ajudar com um novo pedido 😊`;
+function buildMessage() {
+  return `Oi! Passando pra ver como vocês estão e se posso te ajudar com um novo pedido 😊`;
 }
 
 function statusUI(status: "danger" | "warning" | "ok") {
@@ -36,17 +35,19 @@ function statusUI(status: "danger" | "warning" | "ok") {
         stripe: "border-l-amber-300",
         dot: "bg-amber-300",
         badge: "bg-amber-50 text-amber-800 ring-amber-600/0",
-        btn: "bg-amber-300 hover:bg-amber-600 text-white", // ou text-white se preferir
+        btn: "bg-amber-300 hover:bg-amber-600 text-white",
       };
     default:
       return {
         stripe: "border-l-[#b6f01f]",
         dot: "bg-[#b6f01f]",
         badge: "bg-gray-50 text-[#b6f01f] ring-emerald-600/10",
-        btn: "bg-[#b6f01f] hover:bg-[#7da516] text-white", // se quiser branco, troque pra text-white
+        btn: "bg-[#b6f01f] hover:bg-[#7da516] text-white",
       };
   }
 }
+
+type PhoneOption = { id: string; label: string; phone: string };
 
 export default function ClientCard({
   client,
@@ -61,6 +62,7 @@ export default function ClientCard({
     () => daysSince(parseLooseDate(client.ultima_compra as any)),
     [client.ultima_compra]
   );
+
   const status = useMemo(() => getCardStatus(daysNoBuy), [daysNoBuy]);
   const ui = statusUI(status);
 
@@ -69,30 +71,35 @@ export default function ClientCard({
     [client.ultima_interacao]
   );
 
+  // ✅ Telefones vindo do novo banco (vw_web_clientes)
+  const phoneOptions: PhoneOption[] = useMemo(() => {
+    const tel = (client.telefone || "").trim();
+    const cel = (client.tel_celular || "").trim();
 
-  const contactsWithPhone = useMemo(
-    () => (client.contatos || []).filter((c) => !!c.telefone),
-    [client.contatos]
-  );
+    const opts: PhoneOption[] = [];
+    if (cel) opts.push({ id: "cel", label: "Celular", phone: cel });
+    if (tel && tel !== cel) opts.push({ id: "tel", label: "Telefone", phone: tel });
 
-  const hasPhone = contactsWithPhone.length > 0;
+    return opts;
+  }, [client.telefone, client.tel_celular]);
+
+  const hasPhone = phoneOptions.length > 0;
 
   function handleSend() {
     if (!hasPhone) return;
 
-    if (contactsWithPhone.length === 1) {
-      const c = contactsWithPhone[0];
-      const msg = buildMessage(c.nome_contato);
-      window.open(buildWhatsAppLink(c.telefone!, msg), "_blank");
+    if (phoneOptions.length === 1) {
+      const msg = buildMessage();
+      window.open(buildWhatsAppLink(phoneOptions[0].phone, msg), "_blank");
       return;
     }
+
     setOpen(true);
   }
 
-  function pickContact(c: ContatoRow) {
-    if (!c.telefone) return;
-    const msg = buildMessage(c.nome_contato);
-    window.open(buildWhatsAppLink(c.telefone, msg), "_blank");
+  function pickPhone(opt: PhoneOption) {
+    const msg = buildMessage();
+    window.open(buildWhatsAppLink(opt.phone, msg), "_blank");
     setOpen(false);
   }
 
@@ -113,15 +120,12 @@ export default function ClientCard({
       <div className="flex items-start gap-3">
         <span className={["mt-1.5 h-2.5 w-2.5 rounded-full", ui.dot].join(" ")} />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-gray-900">
-            {client.Cliente}
-          </p>
+          <p className="truncate text-sm font-semibold text-gray-900">{client.Cliente}</p>
 
           <p className="mt-0.5 text-xs text-gray-500 truncate">
             {client.Cidade} • Limite: {moneyFormatter.format(client.Limite)}
           </p>
 
-          {/* Meta (badges leves) */}
           <div className="mt-3 flex flex-wrap gap-2">
             <span
               className={[
@@ -146,7 +150,7 @@ export default function ClientCard({
           onClick={handleSend}
           disabled={!hasPhone}
           className={[
-            "rounded-lg px-15 py-1 text-xs font-semibold transition ml-5",
+            "rounded-lg px-5 py-2 text-xs font-semibold transition",
             "ring-1 ring-inset",
             hasPhone
               ? ui.btn
@@ -158,9 +162,8 @@ export default function ClientCard({
 
         <button
           onClick={onMarkContacted}
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition
-             bg-white text-gray-800 ring-1 ring-inset ring-gray-200 hover:bg-gray-50"
->
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition bg-white text-gray-800 ring-1 ring-inset ring-gray-200 hover:bg-gray-50"
+        >
           {primaryLabel}
           <SquareCheckBig size={16} />
         </button>
@@ -175,12 +178,12 @@ export default function ClientCard({
         )}
       </div>
 
-      <ContactPickerModal
+      <PhonePickerModal
         open={open}
         onClose={() => setOpen(false)}
         clientName={client.Cliente}
-        contacts={client.contatos || []}
-        onPick={pickContact}
+        options={phoneOptions}
+        onPick={pickPhone}
       />
     </div>
   );

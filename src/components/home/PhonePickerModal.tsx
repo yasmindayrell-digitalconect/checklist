@@ -1,27 +1,36 @@
-//components\home\ClientCard.tsx
-
+// components/home/PhonePickerModal.tsx
 "use client";
 
-import type { ContatoRow } from "@/types/crm";
+type PhoneOption = {
+  id: string;
+  label: string;
+  phone: string;
+};
 
 type Props = {
   open: boolean;
   onClose: () => void;
   clientName: string;
-  contacts: ContatoRow[];
-  onPick: (c: ContatoRow) => void;
+  options: PhoneOption[];
+  onPick: (opt: PhoneOption) => void;
 };
 
-export default function ContactPickerModal({ open, onClose, clientName, contacts, onPick }: Props) {
+export default function PhonePickerModal({
+  open,
+  onClose,
+  clientName,
+  options,
+  onPick,
+}: Props) {
   if (!open) return null;
 
-  const valid = contacts.filter((c) => !!c.telefone);
+  const valid = options.filter((o) => !!o.phone?.trim());
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 p-4 md:items-center">
       <div className="w-full max-w-md rounded-2xl bg-white shadow-lg">
         <div className="border-b border-gray-100 px-4 py-3">
-          <p className="text-sm font-semibold text-gray-900">Escolher contato</p>
+          <p className="text-sm font-semibold text-gray-900">Escolher número</p>
           <p className="text-xs text-gray-500 truncate">{clientName}</p>
         </div>
 
@@ -30,20 +39,16 @@ export default function ContactPickerModal({ open, onClose, clientName, contacts
             <div className="p-4 text-sm text-gray-600">Nenhum telefone cadastrado.</div>
           ) : (
             <div className="space-y-2 p-2">
-              {valid.map((c) => (
+              {valid.map((o) => (
                 <button
-                  key={c.id_contato}
-                  onClick={() => onPick(c)}
+                  key={o.id}
+                  onClick={() => onPick(o)}
                   className="w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-left hover:bg-gray-50 transition"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-gray-900">
-                        {c.nome_contato}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {c.funcao ? `${c.funcao} • ` : ""}{c.telefone}
-                      </p>
+                      <p className="truncate text-sm font-semibold text-gray-900">{o.label}</p>
+                      <p className="text-xs text-gray-500 truncate">{o.phone}</p>
                     </div>
                     <span className="text-xs font-semibold text-gray-600">Abrir</span>
                   </div>
