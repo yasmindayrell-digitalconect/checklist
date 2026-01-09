@@ -92,9 +92,12 @@ if (session.role === "seller") {
     LEFT JOIN ultima u
       ON u.cliente_id = c.cadastro_id
     WHERE ${where}
-    ORDER BY COALESCE(u.ultima_compra, '1900-01-01'::timestamp) ASC
+    ORDER BY
+      (u.ultima_compra IS NULL) ASC,
+      u.ultima_compra ASC
     LIMIT 5000
   `;
+
 
   const { rows } = await radarPool.query<RadarJoinedRow>(sql, params);
 
