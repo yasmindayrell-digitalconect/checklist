@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/yasmi/Documents/checklist/checklist/app/loading.tsx"],"sourcesContent":["// app/loading.tsx\r\nexport default function GlobalLoading() {\r\n  return (\r\n    <div className=\"min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#E6E8EF]\">\r\n      <div className=\"flex flex-col items-center gap-6\">\r\n\r\n        {/* Spinner */}\r\n        <div className=\"relative\">\r\n          {/* Glow por trás */}\r\n          <div className=\"absolute inset-0 h-16 w-16 rounded-full bg-[#b6f01f]/40 blur-xl animate-pulse\"></div>\r\n\r\n          {/* Círculo girando */}\r\n          <div className=\"h-16 w-16 border-4 border-[#b6f01f] border-t-transparent rounded-full animate-spin\"></div>\r\n        </div>\r\n\r\n        {/* Texto animado */}\r\n        <p className=\"text-sm font-medium text-slate-600 animate-pulse\">\r\n          Carregando painel...\r\n        </p>\r\n      </div>\r\n    </div>\r\n  );\r\n}\r\n"],"names":[],"mappings":"AAAA,kBAAkB;;;;;;;AACH,SAAS;IACtB,qBACE,8OAAC;QAAI,WAAU;kBACb,cAAA,8OAAC;YAAI,WAAU;;8BAGb,8OAAC;oBAAI,WAAU;;sCAEb,8OAAC;4BAAI,WAAU;;;;;;sCAGf,8OAAC;4BAAI,WAAU;;;;;;;;;;;;8BAIjB,8OAAC;oBAAE,WAAU;8BAAmD;;;;;;;;;;;;;;;;;AAMxE","debugId":null}}]
+}

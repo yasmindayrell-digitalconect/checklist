@@ -40,6 +40,8 @@ export default async function Page() {
     const aUpper = a.nome.toUpperCase();
     const bUpper = b.nome.toUpperCase();
 
+
+
     const aIsGrupo = aUpper.startsWith("GRUPO");
     const bIsGrupo = bUpper.startsWith("GRUPO");
 
