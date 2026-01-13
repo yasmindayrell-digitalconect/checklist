@@ -12,6 +12,8 @@ export type ClienteRow = {
   ultima_interacao: string | null;         // ISO string
   ultima_interacao_prev: string | null;    // ISO string (anterior)
   can_undo: boolean;                       // se pode desfazer hoje
+  snooze_until: string | null;
+
 
   id_vendedor: number | null;
   ativo: boolean;

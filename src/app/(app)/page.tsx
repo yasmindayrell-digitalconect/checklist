@@ -11,18 +11,20 @@ type RadarJoinedRow = {
   nome_fantasia: string | null;
   nome_cidade: string | null;
   nome_vendedor: string | null;
-  vendedor_id: number | null; // no banco é double precision
+  vendedor_id: number | null;
   limite_credito_aprovado: number | null;
   cliente_ativo: string | null;
 
   telefone: string | null;
   tel_celular: string | null;
 
-  ultima_interacao: Date | null; // crm_interacoes_radar
+  ultima_interacao: Date | null;
   ultima_interacao_prev: Date | null;
+  snooze_until: Date | null; // ✅ ADICIONA
   can_undo: boolean | null;
-  ultima_compra: Date | null;    // vw_web_relacao_vendas_produtos (MAX)
+  ultima_compra: Date | null;
 };
+
 
 function isActiveFlag(v?: string | null) {
   const s = (v ?? "").trim().toUpperCase();
@@ -88,9 +90,9 @@ if (session.role === "seller") {
       c.tel_celular,
       i.ultima_interacao,
       i.ultima_interacao_prev,
-      (i.ultima_interacao IS NOT NULL
-      AND i.ultima_interacao::date = CURRENT_DATE
-      AND i.ultima_interacao_prev IS NOT NULL) AS can_undo,
+      i.snooze_until,
+        (i.ultima_interacao IS NOT NULL
+        AND i.ultima_interacao::date = CURRENT_DATE) AS can_undo,
       u.ultima_compra
     FROM public.vw_web_clientes c
     LEFT JOIN public.crm_interacoes_radar i
@@ -127,6 +129,8 @@ if (session.role === "seller") {
       // ✅ novos
       ultima_interacao_prev: r.ultima_interacao_prev ? new Date(r.ultima_interacao_prev).toISOString() : null,
       can_undo: Boolean(r.can_undo),
+      snooze_until: r.snooze_until ? new Date(r.snooze_until).toISOString() : null,
+
 
       id_vendedor: idVendedor,
       ativo: isActiveFlag(r.cliente_ativo),
