@@ -3,12 +3,56 @@
 import { useMemo, useState } from "react";
 import type { ClienteComContatos } from "@/types/crm";
 import ChecklistBoard from "./ChecklistBoard";
-import { getBoardColumn, sortByUrgency } from "@/lib/checklistRules";
+import SnoozeModal from "./SnoozeModal";
+import { getBoardColumn, sortByUrgency, shouldHideClient } from "@/lib/checklistRules";
 
 type Props = { clients: ClienteComContatos[] };
 
 export default function HomeClient({ clients }: Props) {
   const [localClients, setLocalClients] = useState(clients);
+
+  // ✅ Snooze modal state
+  const [snoozeOpen, setSnoozeOpen] = useState(false);
+  const [snoozeTarget, setSnoozeTarget] = useState<ClienteComContatos | null>(null);
+
+  function openSnooze(client: ClienteComContatos) {
+    setSnoozeTarget(client);
+    setSnoozeOpen(true);
+  }
+
+  async function snoozeClient(clientId: number, days: 7 | 15 | 30) {
+    const untilIso = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+
+    // ✅ otimista: já marca snooze e some do board (por causa do shouldHideClient)
+    setLocalClients((prev) =>
+      prev.map((c) => (c.id_cliente === clientId ? { ...c, snooze_until: untilIso } : c))
+    );
+
+    try {
+      const res = await fetch("/api/interactions/snooze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_cliente: clientId, days }),
+      });
+
+      if (!res.ok) throw new Error();
+
+      const json = await res.json().catch(() => null);
+      const serverUntil = json?.data?.snooze_until
+        ? new Date(json.data.snooze_until).toISOString()
+        : untilIso;
+
+      setLocalClients((prev) =>
+        prev.map((c) => (c.id_cliente === clientId ? { ...c, snooze_until: serverUntil } : c))
+      );
+    } catch {
+      // rollback: volta a aparecer
+      setLocalClients((prev) =>
+        prev.map((c) => (c.id_cliente === clientId ? { ...c, snooze_until: null } : c))
+      );
+      alert("Não foi possível pausar este cliente.");
+    }
+  }
 
   const buckets = useMemo(() => {
     const needs: ClienteComContatos[] = [];
@@ -16,6 +60,9 @@ export default function HomeClient({ clients }: Props) {
     const ok: ClienteComContatos[] = [];
 
     for (const c of localClients) {
+      // ✅ some do board se estiver snoozado
+      if (shouldHideClient(c)) continue;
+
       const col = getBoardColumn(c);
       if (col === "needs_message") needs.push(c);
       else if (col === "contacted_no_sale") contacted.push(c);
@@ -36,10 +83,6 @@ export default function HomeClient({ clients }: Props) {
       prev.map((c) => {
         if (c.id_cliente !== clientId) return c;
 
-        // ✅ otimista:
-        // - salva prev local (se ainda não tem) pra UI coerente
-        // - marca contato agora
-        // - habilita undo
         return {
           ...c,
           ultima_interacao_prev: c.ultima_interacao_prev ?? c.ultima_interacao ?? null,
@@ -58,23 +101,23 @@ export default function HomeClient({ clients }: Props) {
 
       if (!res.ok) throw new Error();
 
-      // opcional: sincronizar com retorno do server
       const json = await res.json().catch(() => null);
-      const serverUlt = json?.data?.ultima_interacao ? new Date(json.data.ultima_interacao).toISOString() : nowIso;
+      const serverUlt = json?.data?.ultima_interacao
+        ? new Date(json.data.ultima_interacao).toISOString()
+        : nowIso;
 
       setLocalClients((prev) =>
-        prev.map((c) => (c.id_cliente === clientId ? { ...c, ultima_interacao: serverUlt, can_undo: true } : c))
+        prev.map((c) =>
+          c.id_cliente === clientId ? { ...c, ultima_interacao: serverUlt, can_undo: true } : c
+        )
       );
     } catch {
-      // rollback simples: melhor seria refetch, mas aqui fazemos rollback conservador
       setLocalClients((prev) =>
         prev.map((c) => {
           if (c.id_cliente !== clientId) return c;
-          // volta para antes
           return {
             ...c,
             ultima_interacao: c.ultima_interacao_prev ?? null,
-            // como não sabemos com certeza, desabilita undo
             can_undo: false,
           };
         })
@@ -84,7 +127,6 @@ export default function HomeClient({ clients }: Props) {
   }
 
   async function undoContacted(clientId: number) {
-    // otimista: desabilita botão enquanto chama
     setLocalClients((prev) =>
       prev.map((c) => (c.id_cliente === clientId ? { ...c, can_undo: false } : c))
     );
@@ -109,7 +151,6 @@ export default function HomeClient({ clients }: Props) {
             ? {
                 ...c,
                 ultima_interacao: restoredIso,
-                // depois do undo, não há mais undo disponível
                 can_undo: false,
                 ultima_interacao_prev: null,
               }
@@ -117,7 +158,6 @@ export default function HomeClient({ clients }: Props) {
         )
       );
     } catch {
-      // se falhar, reabilita undo (porque provavelmente ainda é válido)
       setLocalClients((prev) =>
         prev.map((c) => (c.id_cliente === clientId ? { ...c, can_undo: true } : c))
       );
@@ -125,7 +165,6 @@ export default function HomeClient({ clients }: Props) {
     }
   }
 
-  // ✅ continua compatível com seus componentes atuais
   const canUndoMap = useMemo(() => {
     const m: Record<number, string | null> = {};
     for (const c of localClients) {
@@ -144,8 +183,25 @@ export default function HomeClient({ clients }: Props) {
           onMarkContacted={markContacted}
           onUndoContacted={undoContacted}
           canUndoMap={canUndoMap}
+          onOpenSnooze={openSnooze}
         />
       </div>
+
+      <SnoozeModal
+        open={snoozeOpen}
+        onClose={() => {
+          setSnoozeOpen(false);
+          setSnoozeTarget(null);
+        }}
+        clientName={snoozeTarget?.Cliente}
+        onConfirm={(days) => {
+          const id = snoozeTarget?.id_cliente;
+          setSnoozeOpen(false);
+          setSnoozeTarget(null);
+          if (!id) return;
+          snoozeClient(id, days);
+        }}
+      />
     </div>
   );
 }

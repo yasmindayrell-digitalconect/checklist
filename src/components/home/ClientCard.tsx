@@ -1,4 +1,3 @@
-// components/home/ClientCard.tsx
 "use client";
 
 import { useMemo, useState } from "react";
@@ -6,7 +5,7 @@ import type { ClienteComContatos } from "@/types/crm";
 import { parseLooseDate, daysSince, formatLocalShort } from "@/lib/dates";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { getCardStatus, type BoardColumn } from "@/lib/checklistRules";
-import { SquareCheckBig } from "lucide-react";
+import { SquareCheckBig, AlarmClockOff } from "lucide-react";
 import PhonePickerModal from "./PhonePickerModal";
 
 type Props = {
@@ -15,6 +14,7 @@ type Props = {
   canUndo: boolean;
   onMarkContacted: () => void;
   onUndoContacted: () => void;
+  onOpenSnooze?: () => void;
 };
 
 function buildMessage() {
@@ -51,9 +51,11 @@ type PhoneOption = { id: string; label: string; phone: string };
 
 export default function ClientCard({
   client,
+  column,
   canUndo,
   onMarkContacted,
   onUndoContacted,
+  onOpenSnooze,
 }: Props) {
   const [open, setOpen] = useState(false);
 
@@ -70,7 +72,6 @@ export default function ClientCard({
     [client.ultima_interacao]
   );
 
-  // ✅ Telefones vindo do novo banco (vw_web_clientes)
   const phoneOptions: PhoneOption[] = useMemo(() => {
     const tel = (client.telefone || "").trim();
     const cel = (client.tel_celular || "").trim();
@@ -106,6 +107,9 @@ export default function ClientCard({
   const primaryLabel = "Feito";
   const showUndo = canUndo;
 
+  // ✅ só na coluna do meio
+  const showSnooze = column === "contacted_no_sale";
+
   return (
     <div
       className={[
@@ -119,7 +123,21 @@ export default function ClientCard({
       <div className="flex items-start gap-3">
         <span className={["mt-1.5 h-2.5 w-2.5 rounded-full", ui.dot].join(" ")} />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-gray-900">{client.id_cliente} {client.Cliente}</p>
+          <div className="flex">
+            <p className="truncate text-sm font-semibold  text-gray-900">
+            {client.id_cliente} {client.Cliente}         
+            </p>
+
+            {showUndo && (
+              <button
+                onClick={onUndoContacted}
+                className="rounded-xl px-3 py-2 text-xs ml-25 font-semibold transition text-gray-600 hover:text-gray-800"
+              >
+                Desfazer
+              </button>
+            )}
+
+          </div>
 
           <p className="mt-0.5 text-xs text-gray-500 truncate">
             {client.Cidade} • Limite: {moneyFormatter.format(client.Limite)}
@@ -144,16 +162,14 @@ export default function ClientCard({
       </div>
 
       {/* Actions */}
-      <div className="mt-4 justify-items-center flex gap-2">
+      <div className="mt-4 justify-items-center flex gap-2 ml-5 ">
         <button
           onClick={handleSend}
           disabled={!hasPhone}
           className={[
             "rounded-lg px-5 py-2 text-xs font-semibold transition",
             "ring-1 ring-inset",
-            hasPhone
-              ? ui.btn
-              : "bg-gray-100 text-gray-400 ring-gray-200 cursor-not-allowed",
+            hasPhone ? ui.btn : "bg-gray-100 text-gray-400 ring-gray-200 cursor-not-allowed",
           ].join(" ")}
         >
           Mensagem
@@ -167,14 +183,18 @@ export default function ClientCard({
           <SquareCheckBig size={16} />
         </button>
 
-        {showUndo && (
+        {showSnooze && (
           <button
-            onClick={onUndoContacted}
-            className="rounded-xl px-3 py-2 text-xs font-semibold transition text-gray-600 hover:text-gray-800"
+            onClick={onOpenSnooze}
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition bg-white text-gray-600 ring-1 ring-inset ring-gray-200 hover:bg-gray-50 hover:text-gray-800"
+            title="Cliente pediu pausa (7/15/30 dias)"
           >
-            Desfazer
+
+            <AlarmClockOff size={16} />
           </button>
         )}
+
+
       </div>
 
       <PhonePickerModal
