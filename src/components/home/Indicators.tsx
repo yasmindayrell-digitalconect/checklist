@@ -31,12 +31,12 @@ function IndicatorCard({
     <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium text-gray-500">{title}</p>
-          <p className="mt-1 text-2xl font-semibold text-gray-900">{value}</p>
-          {subtitle && <p className="mt-1 text-xs text-gray-500">{subtitle}</p>}
+          <p className="text-xs font-medium text-[#495057]">{title}</p>
+          <p className="mt-1 text-2xl font-semibold text-[#212529]">{value}</p>
+          {subtitle && <p className="mt-1 text-xs text-[#868E96]">{subtitle}</p>}
         </div>
 
-        <div className="rounded-xl bg-gray-50 p-2 ring-1 ring-inset ring-gray-200 text-gray-700">
+        <div className="rounded-xl bg-gray-50 p-2 ring-1 ring-inset ring-gray-200 text-[#495057]">
           {icon}
         </div>
       </div>

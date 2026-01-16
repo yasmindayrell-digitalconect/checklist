@@ -173,7 +173,7 @@ const contactLabel = showNextContact
   return (
     <div
       className={[
-        "rounded-2xl bg-white border border-gray-200",
+        "rounded-2xl bg-white border border-[#E9ECEF]",
         "border-l-4",
         ui.stripe,
         "p-3 shadow-sm hover:shadow-md transition",
@@ -184,21 +184,21 @@ const contactLabel = showNextContact
         <span className={["mt-1.5 h-2.5 w-2.5 rounded-full", ui.dot].join(" ")} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <p className="truncate text-sm font-semibold text-gray-900">
+            <p className="truncate text-sm font-semibold text-[#212529]">
               {client.id_cliente} {client.Cliente}
             </p>
 
             {showUndo && (
               <button
                 onClick={onUndoContacted}
-                className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold transition text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold transition text-[#495057] hover:bg-gray-100 hover:text-gray-800"
               >
                 Desfazer
               </button>
             )}
           </div>
 
-          <p className="mt-0.5 text-[11px] text-gray-500 truncate">
+          <p className="mt-0.5 text-[11px] text-[#868E96] truncate">
             {client.Cidade} • Limite: {moneyFormatter.format(client.Limite)}
           </p>
 
@@ -213,7 +213,7 @@ const contactLabel = showNextContact
               Sem compra: {daysNoBuy === null ? "—" : `${daysNoBuy} dias`}
             </span>
 
-            <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-700 ring-1 ring-inset ring-gray-200">
+            <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-[#495057] ring-1 ring-inset ring-gray-200">
               {contactLabel}: {contactDate ? formatLocalVeryShort(contactDate) : "—"}
             </span>
           </div>
@@ -236,17 +236,16 @@ const contactLabel = showNextContact
 
         <button
           onClick={onMarkContacted}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition bg-white text-gray-800 ring-1 ring-inset ring-gray-200 hover:bg-gray-50"
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition bg-white text-[#495057] ring-1 ring-inset ring-gray-200 hover:bg-gray-50"
         >
           {primaryLabel}
-          <SquareCheckBig size={14} />
+          <SquareCheckBig size={14} className="text-[#495057]" />
         </button>
 
         {showSnooze && (
           <button
             onClick={onOpenCalendar}
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition bg-white text-gray-600 ring-1 ring-inset ring-gray-200 hover:bg-gray-50 hover:text-gray-800"
-            title="Cliente pediu pausa (7/15/30 dias)"
           >
             <AlarmClockOff size={14} />
           </button>

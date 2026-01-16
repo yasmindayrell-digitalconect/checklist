@@ -33,7 +33,7 @@ export default function ChecklistBoard({
 
       {/* Grid: ocupa o resto da altura e não deixa vazar */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        <div className="grid h-full grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 xl:gap-6 2xl:gap-12">
+        <div className="grid h-full grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4 xl:gap-6 2xl:gap-12">
           <BoardColumn
             title="Enviar mensagem"
             subtitle="Último contato a mais de 7 dias"
@@ -43,6 +43,18 @@ export default function ChecklistBoard({
             onMarkContacted={onMarkContacted}
             onUndoContacted={onUndoContacted}
             canUndoMap={canUndoMap}
+          />
+
+          <BoardColumn
+            title="Acompanhar"
+            subtitle="Já contatados e ainda sem compra"
+            emptyText="Nada para acompanhar agora."
+            clients={contacted}
+            column="contacted_no_sale"
+            onMarkContacted={onMarkContacted}
+            onUndoContacted={onUndoContacted}
+            canUndoMap={canUndoMap}
+            onOpenCalendar={onOpenCalendar}
           />
 
           <BoardColumn

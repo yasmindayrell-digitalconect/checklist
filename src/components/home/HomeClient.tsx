@@ -178,7 +178,7 @@ export default function HomeClient({ clients }: Props) {
   }, [localClients]);
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-gray-50 overflow-hidden">
+    <div className="h-[calc(100vh-64px)] bg-[#F8F9FA] overflow-hidden">
       <div className="mx-auto h-full w-full max-w-screen-2xl px-3 sm:px-6 md:px-8 lg:px-10 py-4 sm:py-6">
         <ChecklistBoard
           needs={buckets.needs}
