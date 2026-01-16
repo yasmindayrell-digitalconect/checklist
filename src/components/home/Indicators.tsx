@@ -124,7 +124,7 @@ export default function Indicators({ needs, contacted, ok }: Props) {
 
 
   return (
-    <div className="grid gap-4 mb-6 grid-cols-[repeat(auto-fit,minmax(225px,1fr))]">
+    <div className="grid gap-4 mb-6 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
       {/* 1) Total carteira */}
       <IndicatorCard
         title="Total na carteira"
