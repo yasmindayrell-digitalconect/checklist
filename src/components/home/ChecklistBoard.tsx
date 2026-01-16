@@ -33,7 +33,8 @@ export default function ChecklistBoard({
 
       {/* Grid: ocupa o resto da altura e não deixa vazar */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        <div className="grid h-full grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4 xl:gap-6 2xl:gap-12">
+        <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-4 xl:gap-6 2xl:grid-cols-4 2xl:gap-8 min-w-0">
+
           <BoardColumn
             title="Enviar mensagem"
             subtitle="Último contato a mais de 7 dias"
@@ -58,8 +59,8 @@ export default function ChecklistBoard({
           />
 
           <BoardColumn
-            title="Acompanhar"
-            subtitle="Já contatados e ainda sem compra"
+            title="Orçamento"
+            subtitle="Orçamento em aberto"
             emptyText="Nada para acompanhar agora."
             clients={contacted}
             column="contacted_no_sale"
@@ -70,7 +71,7 @@ export default function ChecklistBoard({
           />
 
           <BoardColumn
-            title="Compraram (7 dias)"
+            title="Vendas (últimos 7 dias)"
             subtitle="Clientes OK"
             emptyText="Sem compras recentes por aqui."
             clients={ok}

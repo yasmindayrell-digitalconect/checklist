@@ -31,7 +31,8 @@ export default function BoardColumn({
   onOpenCalendar,
 }: Props) {
   return (
-    <section className="rounded-2xl bg-white shadow-sm border border-gray-100 h-full flex flex-col overflow-hidden">
+    <section className="min-w-0 rounded-2xl bg-white shadow-sm border border-gray-100 h-full flex flex-col overflow-hidden">
+
       <div className="px-4 py-3 border-b border-gray-100 shrink-0 sticky top-0 bg-white z-10">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -42,10 +43,10 @@ export default function BoardColumn({
         </div>
       </div>
 
-      <div className="py-3 px-4 sm:px-6 xl:px-8 space-y-3 xl:space-y-5 2xl:space-y-5 mb-3 flex-1 overflow-y-auto light-scrollbar">
+      <div className="py-3 px-2 sm:px-6 xl:px-6 space-y-3 xl:space-y-5 2xl:space-y-5 mb-3 flex-1 overflow-y-auto light-scrollbar">
 
         {clients.length === 0 ? (
-          <div className="rounded-xl bg-gray-50 p-4 text-sm text-[#495057]">{emptyText}</div>
+          <div className="rounded-xl bg-gray-50 p-2 text-sm text-[#495057]">{emptyText}</div>
         ) : (
           clients.map((c) => (
             <ClientCard

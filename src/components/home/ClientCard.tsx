@@ -202,26 +202,28 @@ const contactLabel = showNextContact
             {client.Cidade} • Limite: {moneyFormatter.format(client.Limite)}
           </p>
 
-          <div className="mt-2 flex flex-wrap gap-1">
-            <span
-              className={[
-                "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium",
-                "ring-1 ring-inset",
-                ui.badge,
-              ].join(" ")}
-            >
-              Sem compra: {daysNoBuy === null ? "—" : `${daysNoBuy} dias`}
-            </span>
-
-            <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-[#495057] ring-1 ring-inset ring-gray-200">
-              {contactLabel}: {contactDate ? formatLocalVeryShort(contactDate) : "—"}
-            </span>
-          </div>
+          
         </div>
       </div>
 
       {/* Actions */}
-      <div className="mt-2 flex flex-wrap items-center gap-2">
+
+      <div className="mt-2 flex flex-wrap gap-1">
+        <span
+          className={[
+          " rounded-full px-2 py-0.5 text-[11px] font-medium",
+          "ring-1 ring-inset",
+            ui.badge,
+            ].join(" ")}
+          >
+          Sem compra: {daysNoBuy === null ? "—" : `${daysNoBuy} dias`}
+        </span>
+
+        <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-[#495057] ring-1 ring-inset ring-gray-200">
+          {contactLabel}: {contactDate ? formatLocalVeryShort(contactDate) : "—"}
+        </span>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-1">
         <button
           onClick={handleSend}
           disabled={!hasPhone}
