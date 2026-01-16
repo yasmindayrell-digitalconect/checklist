@@ -101,8 +101,8 @@ export default function CalendarModal({
           <div>
             <h2 className="text-lg font-semibold">Agendar retorno</h2>
             <p className="mt-1 text-sm text-gray-600">
-              Escolha um dia nos próximos <strong>30 dias</strong> para{" "}
-              <strong>{clientName ?? "o cliente"}</strong> voltar.
+              Escolha uma data em até <strong>30 dias</strong> para o próximo contato com {" "}
+              <strong>{clientName ?? "o cliente"}</strong>.
             </p>
           </div>
 
@@ -128,7 +128,7 @@ export default function CalendarModal({
         </div>
 
         {/* Grade */}
-        <div className="mt-2 grid grid-cols-7 gap-2">
+        <div className="mt-2 grid grid-cols-7 gap-1">
           {Array.from({ length: leadingBlanks }).map((_, idx) => (
             <div key={`blank-${idx}`} />
           ))}
@@ -142,31 +142,23 @@ export default function CalendarModal({
                 type="button"
                 onClick={() => setSelectedKey(d.key)}
                 className={[
-                  "relative rounded-xl border p-2 text-left transition",
-                  "h-17", // tamanho uniforme
-                  active ? "border-blue-600 bg-blue-50" : "border-gray-100 hover:bg-gray-50",
+                  "relative rounded-xl border text-center transition",
+                  "h-12", // tamanho uniforme
+                  active ? "border-blue-600 bg-blue-50" : "border-gray-300 hover:bg-gray-50",
                 ].join(" ")}
               >
-                {d.isToday && (
-                  <span className="absolute right-1 top-1 rounded-full bg-gray-900 px-2 py-0 text-[10px] text-white">
-                    hoje
-                  </span>
-                )}
 
-                <div className="mt-1 text-lg font-semibold leading-none text-gray-900">
+                <div className="mt-0.5 text-lg font-semibold leading-none text-gray-900">
                   {d.day}
                 </div>
-                <div className="mt-1 text-xs text-gray-500">{d.monthShort}</div>
               </button>
             );
           })}
         </div>
 
         {/* Rodapé */}
-        <div className="mt-5 flex items-center justify-between gap-3">
-          <div className="text-sm text-gray-600">
-              Selecione uma data
-          </div>
+        <div className="mt-5 flex justify-end gap-3">
+
 
           <div className="flex gap-2">
             <button
@@ -181,7 +173,7 @@ export default function CalendarModal({
 
             <button
               disabled={!selected}
-              className="rounded-md bg-blue-600 px-4 py-1.5 text-sm text-white disabled:opacity-50"
+              className="rounded-md bg-[#2323ff] px-4 py-1.5 text-sm text-white disabled:opacity-60"
               onClick={() => {
                 if (!selected) return;
                 onConfirm(selected.iso);
