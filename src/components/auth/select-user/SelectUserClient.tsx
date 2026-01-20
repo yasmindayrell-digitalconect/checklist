@@ -56,13 +56,7 @@ export default function SelectUserClient({ sellers }: { sellers: Seller[] }) {
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 
-          <UserCard
-            title="Admins"
-            subtitle="Acesso completo ao sistema"
-            badge="Admin"
-            variant="admin"
-            onClick={selectAdmin}
-          />
+
 
           {sellers.map((s) => (
             <UserCard
@@ -78,6 +72,13 @@ export default function SelectUserClient({ sellers }: { sellers: Seller[] }) {
               onClick={() => selectSeller(s)}
             />
           ))}
+                    <UserCard
+            title="Admins"
+            subtitle="Acesso completo ao sistema"
+            badge="Admin"
+            variant="admin"
+            onClick={selectAdmin}
+          />
 
         </div>
       </div>
