@@ -10,6 +10,7 @@ type RadarJoinedRow = {
   nome_razao_social: string | null;
   nome_fantasia: string | null;
   nome_cidade: string | null;
+  estado_id: string | null;
   nome_vendedor: string | null;
   vendedor_id: string | number | null;
   limite_credito_aprovado: number | null;
@@ -21,7 +22,7 @@ type RadarJoinedRow = {
 
   can_undo: boolean | null;
   ultima_compra: Date | null;
-  last_sale_orcamento_id:number | null;
+  last_sale_orcamento_id :number | null;
 
   orcamentos_abertos: number;
   validade_orcamento_min: Date | null;
@@ -167,6 +168,7 @@ export default async function Page() {
       c.nome_razao_social,
       c.nome_fantasia,
       c.nome_cidade,
+      c.estado_id,
       c.nome_vendedor,
       c.vendedor_id,
       c.limite_credito_aprovado,
@@ -237,6 +239,7 @@ export default async function Page() {
     Cliente: pickClientName(r),
     Razao_social: (r.nome_razao_social ?? "").trim(),
     Cidade: (r.nome_cidade ?? "").trim(),
+    Estado: (r.estado_id ?? "").trim(),
     Vendedor: (r.nome_vendedor ?? "").trim(),
     Limite: Number(r.limite_credito_aprovado ?? 0),
 

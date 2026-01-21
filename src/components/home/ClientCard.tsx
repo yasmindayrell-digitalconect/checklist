@@ -235,12 +235,12 @@ const contactLabel = showNextContact
               </button>
             )}
           </div>
-          <div className=" flex flex-row gap-1 truncate text-[#868E96] mt-0.5 text-[11.5px]">
+          <div className=" flex flex-row gap-1 truncate text-[#868E96] mt-0.5 text-[11px]">
             <p>
-              {client.Cidade} • Limite: {moneyFormatter.format(client.Limite)} 
+              {client.Cidade} • {client.Estado} • Limite: {moneyFormatter.format(client.Limite)} 
             </p>
 
-            {showBudgetId && (
+            {showBudgetId && ( 
               <p>
                  • Pedido: {orderId}
               </p>

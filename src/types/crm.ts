@@ -5,6 +5,7 @@ export type ClienteRow = {
   Cliente: string;
   Razao_social: string;
   Cidade: string;
+  Estado: string | null;
   Vendedor: string;
   Limite: number;
 
