@@ -59,7 +59,7 @@ export default function ChecklistBoard({
 
           <BoardColumn
             title="Orçamento"
-            subtitle="Orçamento em aberto"
+            subtitle="Em negociação"
             emptyText="Nenhum orçamento em aberto."
             clients={budgets} // ✅ FIX AQUI
             column="budget_open"
@@ -70,8 +70,8 @@ export default function ChecklistBoard({
           />
 
           <BoardColumn
-            title="Vendas (últimos 7 dias)"
-            subtitle="Clientes OK"
+            title="Vendas"
+            subtitle="Vendas nos últimos 7 dias"
             emptyText="Sem compras recentes por aqui."
             clients={ok}
             column="ok"

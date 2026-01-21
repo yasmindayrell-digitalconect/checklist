@@ -120,7 +120,7 @@ export default function Indicators({ needs, contacted, ok, budgets }: Props) {
   }, [missingToTarget, businessDaysRemaining]);
 
   return (
-    <div className="grid gap-4 mb-6 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
+    <div className="grid gap-3 mb-6 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
       <IndicatorCard
         title="Total na carteira"
         value={String(totalPortfolio)}
@@ -138,21 +138,21 @@ export default function Indicators({ needs, contacted, ok, budgets }: Props) {
       <IndicatorCard
         title="Precisa mandar mensagem"
         value={String(clientsNeedingMessage)}
-        subtitle="Próx. contato hoje/atrasado"
+        subtitle="Contato pendente"
         icon={<MessageCircle size={18} />}
       />
 
       <IndicatorCard
         title="Orçamentos em aberto"
         value={openBudgetsCount == null ? "—" : String(openBudgetsCount)}
-        subtitle="Em breve"
+        subtitle="Hot lead"
         icon={<Receipt size={18} />}
       />
 
       <IndicatorCard
         title="Vendas para atingir 80%"
         value={missingToTarget <= 0 ? "Atingida 🎉" : `${missingToTarget}`}
-        subtitle="N° de vendas"
+        subtitle="Vendas restantes para a meta"
         icon={<Target size={18} />}
       />
 
