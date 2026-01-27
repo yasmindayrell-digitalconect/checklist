@@ -6,8 +6,8 @@ import { parseLooseDate, daysSince, formatLocalShort, formatLocalVeryShort } fro
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { getCardStatus, type BoardColumn } from "@/lib/checklistRules";
 import { SquareCheckBig, AlarmClockOff, NotebookPen } from "lucide-react";
-import NotesModal from "./NotesModal";
-import PhonePickerModal from "./PhonePickerModal";
+import NotesModal from "@/components/home/NotesModal";
+import PhonePickerModal from "@/components/home/PhonePickerModal";
 
 type Props = {
   client: ClienteComContatos;
@@ -19,7 +19,7 @@ type Props = {
 };
 
 function buildMessage() {
-  return `Oi! Passando pra ver como você está e se posso te ajudar com um novo pedido`;
+  return `Oi! Passando pra ver como você está e se posso te ajudar com um novo pedido 😊`;
 }
 
 function statusUI(status: "danger" | "warning" | "ok") {
@@ -254,21 +254,6 @@ const contactLabel = showNextContact
 
       {/* Actions */}
 
-      <div className="mt-2 flex flex-wrap gap-1">
-        <span
-          className={[
-          " rounded-full px-2 py-0.5 text-[11px] font-medium",
-          "ring-1 ring-inset",
-            ui.badge,
-            ].join(" ")}
-          >
-          Sem compra: {daysNoBuy === null ? "—" : `${daysNoBuy} dias`}
-        </span>
-
-        <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-[#495057] ring-1 ring-inset ring-gray-200">
-          {contactLabel}: {contactDate ? formatLocalVeryShort(contactDate) : "—"}
-        </span>
-      </div>
       <div className="mt-2 flex flex-wrap items-center gap-1">
         <button
           onClick={handleSend}
@@ -282,36 +267,7 @@ const contactLabel = showNextContact
           Mensagem
         </button>
 
-        <button
-          onClick={onMarkContacted}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition bg-white text-[#495057] ring-1 ring-inset ring-gray-200 hover:bg-gray-50"
-        >
-          {primaryLabel}
-          <SquareCheckBig size={14} className="text-[#495057]" />
-        </button>
 
-        {showSnooze && (
-          <button
-            onClick={onOpenCalendar}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition bg-white text-gray-600 ring-1 ring-inset ring-gray-200 hover:bg-gray-50 hover:text-gray-800"
-          >
-            <AlarmClockOff size={14} />
-          </button>
-        )}
-
-        <button
-          onClick={() => setNotesOpen(true)}
-          className={[
-            "relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition",
-            "bg-white text-gray-600 ring-1 ring-inset ring-gray-200 hover:bg-gray-50 hover:text-gray-800",
-          ].join(" ")}
-          title={hasNotes ? "Ver/editar observações" : "Adicionar observação"}
-        >
-          <NotebookPen size={14} />
-          {hasNotes && (
-            <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-blue-600" />
-          )}
-        </button>
       </div>
 
       <PhonePickerModal
@@ -320,14 +276,6 @@ const contactLabel = showNextContact
         clientName={client.Cliente}
         options={phoneOptions}
         onPick={pickPhone}
-      />
-
-      <NotesModal
-        open={notesOpen}
-        onClose={() => setNotesOpen(false)}
-        clientName={client.Cliente}
-        initialText={notes}
-        onSave={saveNotes}
       />
     </div>
   );
