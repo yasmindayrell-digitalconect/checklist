@@ -73,9 +73,9 @@ export default function BudgetAchieved({
                 {currency === "BRL" ? formatCompactBRL(target) : target}
             </div>
         </div> */}
-        <div className="w-full rounded-2xl bg-white border border-gray-100 shadow-lg ">
+        <div className="w-full h-full rounded-2xl bg-white border border-gray-100 shadow-lg ">
         <div className="text-sm font-semibold text-[#212529] gap-2 px-6 mt-6">Atingido</div>
-            <div className="mt-4 flex items-center justify-center py-6">
+            <div className="flex items-center justify-center py-6">
                 <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block">
                 <defs>
                     {/* gradiente parecido com o da imagem */}
