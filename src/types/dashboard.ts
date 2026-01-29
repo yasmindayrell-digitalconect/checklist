@@ -15,7 +15,7 @@ export type Row = {
 
   // orçamento (1 linha por orçamento)
   orcamento_id: number | string;
-  data_validade_orcamento: Date | null;
+  validade_orcamento_min: Date | null;
 
   // flag p/ UI
   is_carteira: boolean;
@@ -64,4 +64,38 @@ export type OpenBudgetCard = {
 
   // pintar card
   is_carteira: boolean;
+};
+
+// src/types/phone.ts
+export type PhoneOption = {
+  id: string;
+  name: string;
+  role: string | null;
+  phone: string;
+};
+
+export type SellerKpiRow = {
+  seller_id: number;
+  seller_name: string | null;
+
+  // calendário
+  uteis_mes: number;
+  corridos: number;
+  restam: number;
+
+  // vendas (nomes “novos”)
+  gross_total: number;
+  freight_total: number;
+  operational_expense: number;
+  system_total: number;
+  net_sales: number;
+
+  // devoluções / taxa
+  devolucoes: number;
+  taxa_dev: string; // "12.34%"
+
+  // meta
+  goal_meta: number;
+  pct_achieved: number; // número (ex: 87.65)
+  pct_ating: string;    // opcional "87.65%" se vc quiser mostrar como texto
 };

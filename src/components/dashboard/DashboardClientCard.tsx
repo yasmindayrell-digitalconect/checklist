@@ -4,36 +4,35 @@ import { useMemo, useState } from "react";
 import type { OpenBudgetCard } from "@/types/dashboard";
 import { parseLooseDate, formatLocalVeryShort } from "@/lib/dates";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
-import PhonePickerModal from "@/components/home/PhonePickerModal";
-
+import PhonePickerModal from "@/components/dashboard/PhonePickerModal";
+import type { PhoneOption } from "@/types/dashboard";
 type Props = { client: OpenBudgetCard };
 
 function buildMessage() {
   return `Oi! Passando pra ver como você está e se posso te ajudar com um novo pedido 😊`;
 }
 
-type PhoneOption = {
-  id: string;
-  nome: string;
-  funcao: string | null;
-  phone: string;
-};
-
 function daysUntil(date: Date | null) {
   if (!date) return null;
+
+  // normaliza "hoje" e "validade" pra meia-noite local
   const today = new Date();
   const d0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const d1 = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  const d = new Date(date);
+  const d1 = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
   const diffMs = d1.getTime() - d0.getTime();
   return Math.round(diffMs / (1000 * 60 * 60 * 24));
 }
 
+
 function uniquePhonesFromClient(client: OpenBudgetCard): PhoneOption[] {
-  const contatos = client.contatos ?? [];
+  const contacts = client.contatos ?? [];
   const seen = new Set<string>();
   const out: PhoneOption[] = [];
 
-  for (const c of contatos) {
+  for (const c of contacts) {
     const phone = (c.telefone ?? "").trim();
     if (!phone) continue;
 
@@ -43,8 +42,8 @@ function uniquePhonesFromClient(client: OpenBudgetCard): PhoneOption[] {
 
     out.push({
       id: String(c.id_contato),
-      nome: ((c.nome_contato ?? "").trim() || "Contato") as string,
-      funcao: (c.funcao ?? "").trim() || null,
+      name: (c.nome_contato ?? "").trim() || "Contato",
+      role: (c.funcao ?? "").trim() || null,
       phone,
     });
   }
@@ -52,44 +51,79 @@ function uniquePhonesFromClient(client: OpenBudgetCard): PhoneOption[] {
   return out;
 }
 
+function getAccentColor(daysLeft: number | null) {
+  // ✅ ajuste fácil aqui:
+  // overdue -> amarelo
+  // vence em até 3 dias -> laranja
+  // ok -> verde
+  if (daysLeft == null) return "#80ef80";
+  if (daysLeft < 0) return "#FFE865";
+  return "#80ef80";
+}
+
 export default function DashboardClientCard({ client }: Props) {
-  const [open, setOpen] = useState(false);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
-  // datas
-  const dueDate = useMemo(() => {
-    const d = parseLooseDate(client.validade_orcamento_min as any);
-    return d ?? null;
-  }, [client.validade_orcamento_min]);
+  // validade
 
-  const daysToExpire = useMemo(() => daysUntil(dueDate), [dueDate]);
-  const isExpired = daysToExpire != null && daysToExpire < 0;
+function parseDateOnly(raw: string): Date | null {
+  // pega só YYYY-MM-DD mesmo que venha ISO completo
+  const datePart = raw.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return null;
 
-  // regras de cor
-  const accent = isExpired ? "#FFE865" : "#80ef80";
+  const [y, m, d] = datePart.split("-").map(Number);
+  return new Date(y, m - 1, d); // meia-noite LOCAL
+}
+
+const validUntil = useMemo(() => {
+  const raw = client.validade_orcamento_min;
+  if (!raw) return null;
+
+  // ✅ parse seguro (ignora timezone do ISO)
+  const dLocal = parseDateOnly(raw);
+  if (dLocal) return dLocal;
+
+  // fallback se vier em outro formato
+  return parseLooseDate(raw as any) ?? null;
+}, [client.validade_orcamento_min]);
+
+
+
+  const daysLeft = useMemo(() => daysUntil(validUntil), [validUntil]);
+  const isOverdue = daysLeft != null && daysLeft < 0;
+
+  const accentColor = useMemo(() => getAccentColor(daysLeft), [daysLeft]);
 
   // contatos / whatsapp
-  const phoneOptions = useMemo(() => uniquePhonesFromClient(client), [client]);
-  const hasPhone = phoneOptions.length > 0;
+  const phoneChoices = useMemo(() => uniquePhonesFromClient(client), [client]);
+  const hasPhone = phoneChoices.length > 0;
 
-  function sendTo(phone: string) {
+  function openWhatsApp(phone: string) {
     window.open(buildWhatsAppLink(phone, buildMessage()), "_blank");
   }
 
   function handleSend() {
     if (!hasPhone) return;
-    if (phoneOptions.length === 1) return sendTo(phoneOptions[0].phone);
-    setOpen(true);
+    if (phoneChoices.length === 1) return openWhatsApp(phoneChoices[0].phone);
+    setIsPickerOpen(true);
   }
 
-  function pickPhone(opt: PhoneOption) {
-    sendTo(opt.phone);
-    setOpen(false);
+  function handlePickPhone(opt: PhoneOption) {
+    openWhatsApp(opt.phone);
+    setIsPickerOpen(false);
   }
 
-  const moneyFormatter = useMemo(
-    () => new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 }),
+  const moneyBRL = useMemo(
+    () =>
+      new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        maximumFractionDigits: 0,
+      }),
     []
   );
+  console.log(client.validade_orcamento_min, validUntil, daysLeft);
+
 
   return (
     <div
@@ -98,13 +132,13 @@ export default function DashboardClientCard({ client }: Props) {
         "p-3 shadow-sm hover:shadow-md transition",
         "h-full flex flex-col",
       ].join(" ")}
-      style={{ borderLeftColor: accent }}
+      style={{ borderLeftColor: accentColor }}
     >
       {/* Header */}
       <div className="flex items-start gap-2">
         <span
           className="mt-1.5 h-2.5 w-2.5 rounded-full"
-          style={{ backgroundColor: accent }}
+          style={{ backgroundColor: accentColor }}
         />
 
         <div className="min-w-0 flex-1">
@@ -116,17 +150,17 @@ export default function DashboardClientCard({ client }: Props) {
             <div className="flex gap-2">
               {client.is_carteira ? (
                 <span
-                  className="shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold text-gray-500"
-                  style={{ backgroundColor: `${accent}33` }} // ~20% opacity
+                  className="shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold text-gray-600"
+                  style={{ backgroundColor: `${accentColor}33` }}
                 >
                   Carteira
                 </span>
               ) : null}
 
-              {isExpired ? (
+              {isOverdue ? (
                 <span
-                  className="shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold text-gray-500"
-                  style={{ backgroundColor: `${accent}33` }}
+                  className="shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold text-gray-600"
+                  style={{ backgroundColor: `${accentColor}33` }}
                 >
                   Vencido
                 </span>
@@ -137,18 +171,17 @@ export default function DashboardClientCard({ client }: Props) {
           <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-[#868E96]">
             <span className="truncate">
               {client.Cidade} • {client.Estado} • Limite:{" "}
-              {moneyFormatter.format(client.Limite)}
+              {moneyBRL.format(client.Limite)}
             </span>
 
             {client.open_budget_id != null && (
-              <span>• Pedido: {client.open_budget_id}</span>
+              <span>• Orçamento: {client.open_budget_id}</span>
             )}
 
-            {dueDate && (
-              <span
-                className={isExpired ? "text-[#868E96]" : undefined}
-              >
-                • Validade: {formatLocalVeryShort(dueDate)}
+            {validUntil && (
+              <span className={isOverdue ? "text-[#868E96]" : undefined}>
+                • Validade: {formatLocalVeryShort(validUntil)}
+                {daysLeft != null ? ` (${daysLeft}d)` : ""}
               </span>
             )}
           </div>
@@ -167,22 +200,18 @@ export default function DashboardClientCard({ client }: Props) {
               ? "text-white"
               : "bg-gray-100 text-gray-400 ring-gray-200 cursor-not-allowed",
           ].join(" ")}
-          style={
-            hasPhone
-              ? { backgroundColor: accent, borderColor: accent }
-              : undefined
-          }
+          style={hasPhone ? { backgroundColor: accentColor } : undefined}
         >
           Mensagem
         </button>
       </div>
 
       <PhonePickerModal
-        open={open}
-        onClose={() => setOpen(false)}
+        open={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
         clientName={client.Cliente}
-        options={phoneOptions}
-        onPick={pickPhone}
+        options={phoneChoices}
+        onPick={handlePickPhone}
       />
     </div>
   );
