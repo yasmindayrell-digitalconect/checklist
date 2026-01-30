@@ -52,7 +52,7 @@ export default function DailyGoalCard({
   return (
     <div className="rounded-2xl bg-white border border-gray-100 shadow-lg p-6">
       <div className="flex items-start justify-between gap-4">
-        <div className="text-sm font-semibold text-[#212529]">Metas</div>
+        <div className="text-sm font-semibold text-[#212529]">Meta Mensal</div>
         <div className={`px-3 py-1.5 rounded-full border text-xs font-semibold ${toneClasses}`}>
           {status.label}
         </div>

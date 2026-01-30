@@ -4,6 +4,7 @@ import type { OpenBudgetCard, SellerKpiRow } from "@/types/dashboard";
 import OpenBudgetsRow from "./OpenBudgetsRow";
 import BudgetAchieved from "./BudgetAchieved";
 import DailyGoalCard from "./GoalsCard";
+import WeekGoalCard from "./weekGoalsCard";
 import DaysCard from "./DaysCard";
 import DevolutionsCard from "./DevolutionCard";
 
@@ -24,7 +25,7 @@ export default function DashboardClient({
           {!kpi ? (
             <p className="text-sm text-[#495057]">Sem dados de vendas no mês atual.</p>
           ) : (
-            <div className="mt-4 grid gap-3 lg:gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="mt-4 grid gap-3 lg:gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-5 3xl:grid-cols-5 ">
               <BudgetAchieved
                 value={kpi.net_sales}
                 target={kpi.goal_meta}
@@ -39,6 +40,7 @@ export default function DashboardClient({
                 workdaysRemaining={kpi.business_days_remaining}
               />
 
+
               <DaysCard                 
                 workdaysInMonth={kpi.business_days_month}
                 workdaysElapsed={kpi.business_days_elapsed}
@@ -49,6 +51,15 @@ export default function DashboardClient({
                 taxaDev={kpi.return_rate_pct}
                 devolutionCount={kpi.total_returns_count}
               />
+
+              <WeekGoalCard
+                weekly_meta={kpi.weekly_meta}
+                weekly_realized={kpi.weekly_realized}
+                weekly_pct_achieved={kpi.weekly_pct_achieved}
+                weekly_missing_value={kpi.weekly_missing_value}
+                weekly_bonus={kpi.weekly_bonus}
+              />
+
             </div>
           )}
         </div>
