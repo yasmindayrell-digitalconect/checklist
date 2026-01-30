@@ -14,6 +14,7 @@ type Props = {
   onUndoContacted: (id_cliente: number) => void;
   canUndoMap: Record<number, string | null>;
   onOpenCalendar: (client: ClienteComContatos) => void;
+  nowISO: string;
 };
 
 export default function ChecklistBoard({
@@ -25,15 +26,16 @@ export default function ChecklistBoard({
   onUndoContacted,
   canUndoMap,
   onOpenCalendar,
+  nowISO,
 }: Props) {
   return (
     <div className="h-full flex flex-col min-h-0">
       <div className="shrink-0">
-        <Indicators needs={needs} contacted={contacted} budgets={budgets} ok={ok} />
+        <Indicators nowISO={nowISO} needs={needs} contacted={contacted} budgets={budgets} ok={ok} />
       </div>
 
-      <div className="flex-1 min-h-0 overflow-hidden">
-        <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-4 xl:gap-6 2xl:grid-cols-4 2xl:gap-8 min-w-0">
+      <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
+         <div className="grid gap-4 md:h-full md:grid-cols-2 md:gap-5 xl:grid-cols-4 xl:gap-6 2xl:grid-cols-4 2xl:gap-8 min-w-0 pb-4 md:pb-0">
           <BoardColumn
             title="Enviar mensagem"
             subtitle="Último contato a mais de 7 dias"

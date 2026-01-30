@@ -61,6 +61,7 @@ function pickClientName(r: RadarJoinedRow) {
 }
 
 export default async function Page() {
+  const nowISO = new Date().toISOString();
   noStore();
 
   const session = await getServerSession();
@@ -81,6 +82,7 @@ export default async function Page() {
       where += ` AND (c.vendedor_id)::int = $${params.length}::int`;
     }
   }
+
 
   // ✅ admin: só a carteira destes vendedores
   if (session.role === "admin") {
@@ -269,6 +271,5 @@ export default async function Page() {
   return { ...row, contatos };
 });
 
-  return <HomeClient clients={enriched} />;
+  return <HomeClient clients={enriched} nowISO={nowISO}/>;
 }
-

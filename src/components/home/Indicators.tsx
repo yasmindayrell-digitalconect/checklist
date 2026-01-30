@@ -10,6 +10,7 @@ type Props = {
   contacted: ClienteComContatos[];
   ok: ClienteComContatos[];
   budgets: ClienteComContatos[];
+  nowISO: string;
 };
 
 function isSameMonth(date: Date, reference: Date) {
@@ -60,28 +61,61 @@ function IndicatorCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="w-full rounded-2xl bg-white border border-gray-100 shadow-sm p-3">
-      <div className="flex items-start justify-between">
+    <div
+      className="
+        w-full bg-white border border-gray-100 shadow-sm
+        rounded-xl md:rounded-2xl
+        p-2 md:p-3
+      "
+    >
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-xs font-medium text-[#495057]">{title}</p>
-          <p className="mt-1 text-2xl font-semibold text-[#212529]">{value}</p>
-          {subtitle && <p className="mt-1 text-xs text-[#868E96] truncate">{subtitle}</p>}
+          <p className="text-[11px] md:text-xs font-medium text-[#495057] leading-tight">
+            {title}
+          </p>
+
+          <p className="mt-0.5 md:mt-1 text-lg md:text-2xl font-semibold text-[#212529] leading-tight">
+            {value}
+          </p>
+
+          {/* ✅ some no mobile, aparece no md+ */}
+          {subtitle && (
+            <p className="hidden md:block mt-1 text-xs text-[#868E96] truncate">
+              {subtitle}
+            </p>
+          )}
         </div>
 
-        <div className="shrink-0 rounded-xl bg-gray-50 p-2 ring-1 ring-inset ring-gray-200 text-[#495057]">
-          {icon}
+        <div
+          className="
+            shrink-0 text-[#4C4CCF]
+            rounded-lg md:rounded-xl
+            p-1.5 md:p-2
+            bg-[#4C4CCF]/10 ring-1 ring-inset ring-gray-200
+          "
+        >
+          {/* ✅ controla tamanho do ícone pelo wrapper */}
+          <span className="block [&>svg]:h-4 [&>svg]:w-4 md:[&>svg]:h-3.75 md:[&>svg]:w-3.75`">
+            {icon}
+          </span>
         </div>
       </div>
     </div>
   );
 }
 
-export default function Indicators({ needs, contacted, ok, budgets }: Props) {
-  const allClients = useMemo(() => [...needs, ...contacted, ...ok, ...budgets], [needs, contacted, ok, budgets]);
+
+export default function Indicators({ needs, contacted, ok, budgets, nowISO }: Props) {
+  const now = useMemo(() => new Date(nowISO), [nowISO]);
+
+  const allClients = useMemo(
+    () => [...needs, ...contacted, ...ok, ...budgets],
+    [needs, contacted, ok, budgets]
+  );
+
   const totalPortfolio = allClients.length;
 
   const soldThisMonth = useMemo(() => {
-    const now = new Date();
     let count = 0;
 
     for (const client of allClients) {
@@ -90,7 +124,7 @@ export default function Indicators({ needs, contacted, ok, budgets }: Props) {
     }
 
     return count;
-  }, [allClients]);
+  }, [allClients, now]);
 
   const monthlyActivationPct = useMemo(() => {
     if (totalPortfolio === 0) return 0;
@@ -98,69 +132,83 @@ export default function Indicators({ needs, contacted, ok, budgets }: Props) {
   }, [soldThisMonth, totalPortfolio]);
 
   const clientsNeedingMessage = needs.length;
-
-  // Placeholder (when you have the real metric, replace this)
   const openBudgetsCount = budgets.length;
 
-  // ✅ 80% target
   const targetPct = 80;
-  const targetCount = useMemo(() => Math.ceil(totalPortfolio * (targetPct / 100)), [totalPortfolio]);
-  const missingToTarget = useMemo(() => Math.max(0, targetCount - soldThisMonth), [targetCount, soldThisMonth]);
+  const targetCount = useMemo(
+    () => Math.ceil(totalPortfolio * (targetPct / 100)),
+    [totalPortfolio]
+  );
 
-  const daysRemaining = useMemo(() => daysRemainingInMonthInclusive(new Date()), []);
+  const missingToTarget = useMemo(
+    () => Math.max(0, targetCount - soldThisMonth),
+    [targetCount, soldThisMonth]
+  );
+
+  // ✅ usa "now" congelado do server
+  const daysRemaining = useMemo(() => daysRemainingInMonthInclusive(now), [now]);
+
   const perDay = useMemo(() => {
     if (missingToTarget <= 0) return 0;
     return Math.ceil(missingToTarget / Math.max(1, daysRemaining));
   }, [missingToTarget, daysRemaining]);
 
-  const businessDaysRemaining = useMemo(() => businessDaysRemainingInMonthInclusive(new Date()), []);
+  const businessDaysRemaining = useMemo(
+    () => businessDaysRemainingInMonthInclusive(now),
+    [now]
+  );
+
   const perBusinessDay = useMemo(() => {
     if (missingToTarget <= 0) return 0;
     return Math.ceil(missingToTarget / Math.max(1, businessDaysRemaining));
   }, [missingToTarget, businessDaysRemaining]);
 
   return (
-    <div className="grid gap-3 mb-6 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
+    <div className="grid gap-2 md:gap-3 mb-4 md:mb-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
       <IndicatorCard
         title="Total na carteira"
         value={String(totalPortfolio)}
         subtitle="Todos clientes no painel"
-        icon={<Users size={18} />}
+        icon={<Users size={15} />}
       />
 
       <IndicatorCard
         title="Positivação do mês"
         value={`${monthlyActivationPct}%`}
         subtitle={`${soldThisMonth} vendas no mês`}
-        icon={<TrendingUp size={18} />}
+        icon={<TrendingUp size={15} />}
       />
 
       <IndicatorCard
         title="Precisa mandar mensagem"
         value={String(clientsNeedingMessage)}
         subtitle="Contato pendente"
-        icon={<MessageCircle size={18} />}
+        icon={<MessageCircle size={15} />}
       />
 
       <IndicatorCard
         title="Orçamentos em aberto"
         value={openBudgetsCount == null ? "—" : String(openBudgetsCount)}
         subtitle="Hot lead"
-        icon={<Receipt size={18} />}
+        icon={<Receipt size={15} />}
       />
 
       <IndicatorCard
         title="Vendas para atingir 80%"
         value={missingToTarget <= 0 ? "Atingida 🎉" : `${missingToTarget}`}
         subtitle="Vendas restantes para a meta"
-        icon={<Target size={18} />}
+        icon={<Target size={15} />}
       />
 
       <IndicatorCard
         title="Vendas por dia para 80%"
         value={missingToTarget <= 0 ? "—" : `${perBusinessDay}/dia`}
-        subtitle={missingToTarget <= 0 ? "Meta já atingida 🎉" : `${businessDaysRemaining} dias úteis restantes`}
-        icon={<CalendarCheck size={18} />}
+        subtitle={
+          missingToTarget <= 0
+            ? "Meta já atingida 🎉"
+            : `${businessDaysRemaining} dias úteis restantes`
+        }
+        icon={<CalendarCheck size={15} />}
       />
     </div>
   );
