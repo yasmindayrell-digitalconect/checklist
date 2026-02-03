@@ -1,9 +1,17 @@
+//components\header\Header.tsx
+
 import { CircleUserRound } from "lucide-react";
 import ProfileAvatar from "@/components/ProfileAvatar";
 import HeaderTabs from "./Tabs";
 import HeaderActions from "./HeaderClient";
 
-export default function Header({ sellerName }: { sellerName?: string }) {
+export default function Header({
+  sellerName,
+  isAdmin,
+}: {
+  sellerName?: string;
+  isAdmin: boolean;
+}) {
   return (
     <header
       className="
@@ -28,7 +36,8 @@ export default function Header({ sellerName }: { sellerName?: string }) {
 
         {/* Centro (somente desktop) */}
         <div className="hidden sm:flex flex-1 justify-center px-6">
-          <HeaderTabs />
+          <HeaderTabs isAdmin={isAdmin} />
+
         </div>
 
         {/* Right (client) */}
@@ -37,7 +46,7 @@ export default function Header({ sellerName }: { sellerName?: string }) {
 
       {/* Linha 2 (somente mobile): Tabs */}
       <div className="sm:hidden px-4 pb-3">
-        <HeaderTabs />
+        <HeaderTabs isAdmin={isAdmin} />
       </div>
     </header>
   );

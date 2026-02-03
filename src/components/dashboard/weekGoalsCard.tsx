@@ -135,7 +135,7 @@ export default function WeekGoalCard({
 
         {!hit ? (
           <div className="mt-1 text-center text-[11px] text-slate-500">
-            Só ao bater a meta.
+            Cálculo ao bater a meta.
           </div>
         ) : null}
       </div>

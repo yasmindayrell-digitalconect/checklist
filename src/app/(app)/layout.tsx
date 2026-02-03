@@ -9,11 +9,12 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const session = await getServerSession();
+  const isAdmin = session?.role === "admin";
 
   return (
     <>
       {/* Header fixo */}
-      <Header sellerName={session?.sellerName} />
+      <Header sellerName={session?.sellerName} isAdmin={!!isAdmin} />
 
       {/* Conteúdo (sem sidebar) */}
       <main className="pt-16 min-w-0">{children}</main>
