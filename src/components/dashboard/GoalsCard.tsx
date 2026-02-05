@@ -44,7 +44,7 @@ export default function DailyGoalCard({
 
   const toneClasses =
     status.tone === "green"
-      ? "bg-green-50 text-green-700 border-green-100"
+      ? "bg-[#80ef80]/20 text-[#42cd42] border-green-100"
       : status.tone === "red"
       ? "bg-red-50 text-red-700 border-red-100"
       : "bg-yellow-50 text-yellow-700 border-yellow-100";
@@ -58,26 +58,26 @@ export default function DailyGoalCard({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-1 grid-cols">
-        <div className=" flex justify-between rounded-xl border border-gray-200 p-3">
+      <div className="mt-4 grid gap-2 grid-cols">
+        <div className=" flex justify-between rounded-xl border bg-gray-50 border-gray-200 p-3">
           <div className="text-[#6c757d]">Meta</div>
           <div className="text-base font-semibold text-[#212529]">{formatBRL(safeGoal)}</div>
         </div>
 
-        <div className="flex justify-between rounded-xl border border-gray-200 p-3">
+        <div className="flex justify-between rounded-xl border bg-gray-50 border-gray-200 p-3">
           <div className=" text-[#6c757d]">Vendido</div>
-          <div className="text-base font-semibold text-[#212529]">{formatBRL(safeNetSales)}</div>
+          <div className="text-base font-semibold text-[#42cd42]">{formatBRL(safeNetSales)}</div>
         </div>
 
-        <div className="flex justify-between rounded-xl border border-gray-200 p-3">
+        <div className="flex justify-between rounded-xl border bg-gray-50 border-gray-200 p-3">
           <div className=" text-[#6c757d]">Falta</div>
           <div className="text-base font-semibold text-[#212529]">{formatBRL(remainingGoal)}</div>
         </div>
 
-        <div className="flex justify-between rounded-xl border border-gray-200 p-3">
-          <div className="text-[#6c757d]">Vendas / dia</div>
+        {/* <div className="flex justify-between rounded-xl border bg-gray-50 border-gray-200 p-3">
+          <div className="text-[#6c757d]">Venda / dia</div>
           <div className="text-base font-semibold text-[#212529]">{formatBRL(perDay)}</div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

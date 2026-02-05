@@ -4,18 +4,28 @@
 import Link from "next/link";
 import React, { useMemo } from "react";
 import SellerCard from "./SellerCard";
-import { formatBRL } from "./SellerCard";
+import { formatBRL } from  "@/components/utils"
 import type { RankingSellerRow } from "@/app/(app)/ranking/page";
+
+function formatPct(v: number, decimals = 2) {
+  const n = Number.isFinite(v) ? v : 0;
+  return `${n.toFixed(decimals)}%`;
+}
 
 export default function RankingClient({
   weekOffset,
   weekLabel,
   totalMonthGoal,
   sellers,
+  totalMonthSold,
+  totalMonthPct,
+  
 }: {
   weekOffset: number;
   weekLabel: string;
   totalMonthGoal: number;
+  totalMonthSold: number;
+  totalMonthPct: number;
   sellers: RankingSellerRow[];
 }) {
   const ranked = useMemo(() => {
@@ -34,6 +44,8 @@ export default function RankingClient({
     });
   }, [sellers]);
 
+
+
   return (
     <div className="w-full">
       <div className="rounded-2xl bg-white border border-gray-100 shadow-lg">
@@ -45,14 +57,14 @@ export default function RankingClient({
               Acompanhe o desempenho semanal e a projeção mensal.
             </p>
             <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center rounded-md bg-emerald-600 mt-2 px-4 py-2 text-xs font-semibold text-white shadow-md hover:bg-emerald-700 transition"
+              href="/goals"
+              className="inline-flex items-center justify-center rounded-md bg-[#58da58] mt-2 px-4 py-2 text-xs font-semibold text-white shadow-md hover:bg-emerald-700 transition"
             >
               Editar metas
-            </Link>
+            </Link> 
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+          <div className="flex flex-col gap-10  sm:flex-row sm:items-baseline sm:justify-end">
             <div className="text-center sm:text-left">
               <div className="text-[10px] font-semibold tracking-wide text-slate-500 uppercase">
                 Meta geral mês
@@ -60,6 +72,16 @@ export default function RankingClient({
               <div className="text-2xl font-extrabold tabular-nums text-slate-900">
                 {formatBRL(totalMonthGoal)}
               </div>
+            </div>
+                        <div className="text-center sm:text-left">
+              <div className="text-[10px] font-semibold tracking-wide text-slate-500 uppercase">
+                Realizado
+              </div>
+              <div className="text-2xl font-extrabold tabular-nums text-slate-400">
+                {formatBRL(totalMonthSold)}
+              </div>
+              <div className="text-right font-bold text-sm text-[#80ef80]">{formatPct(totalMonthPct)}</div>
+              
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">

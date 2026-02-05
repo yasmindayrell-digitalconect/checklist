@@ -85,12 +85,13 @@ export default async function AdminRankingPage({
     /* =========================
        MENSAL
        ========================= */
+    params AS ( SELECT $2::date AS data_ref ),
     periodo AS (
       SELECT
-        date_trunc('month', CURRENT_DATE)::date AS dt_ini,
-        (date_trunc('month', CURRENT_DATE) + interval '1 month - 1 day')::date AS dt_fim,
-        (extract(year from date_trunc('month', CURRENT_DATE))::int * 100
-          + extract(month from date_trunc('month', CURRENT_DATE))::int) AS ano_mes
+        date_trunc('month', (SELECT data_ref FROM params))::date AS dt_ini,
+        (date_trunc('month', (SELECT data_ref FROM params)) + interval '1 month - 1 day')::date AS dt_fim,
+        (extract(year from date_trunc('month', (SELECT data_ref FROM params)))::int * 100
+          + extract(month from date_trunc('month', (SELECT data_ref FROM params)))::int) AS ano_mes
     ),
     calendario AS (
       SELECT
@@ -203,9 +204,6 @@ export default async function AdminRankingPage({
     /* =========================
        SEMANAL (semana do data_ref)
        ========================= */
-    params AS (
-      SELECT $2::date AS data_ref
-    ),
     semana_ref AS (
       SELECT
         date_trunc('week', p.data_ref)::date AS semana_ini,
@@ -315,17 +313,20 @@ export default async function AdminRankingPage({
     ORDER BY weekly_pct_achieved DESC, weekly_realized DESC, net_sales DESC;
   `;
 
-    const sqlTotalMonthGoal = `
+  const sqlTotalMonthGoal = `
     SELECT
       COALESCE(SUM(COALESCE(m.meta, 0)), 0)::numeric AS total_goal
     FROM public.metas m
     WHERE m.empresa_id = ANY($1::bigint[])
       AND m.ano_mes =
-        (EXTRACT(YEAR FROM CURRENT_DATE)::bigint * 100
-          + EXTRACT(MONTH FROM CURRENT_DATE)::bigint)
+        (EXTRACT(YEAR FROM $2::date)::bigint * 100
+          + EXTRACT(MONTH FROM $2::date)::bigint)
   `;
    const empresaIds = [1, 2, 3, 5, 6];
-   const { rows: totalGoalRows } = await radarPool.query(sqlTotalMonthGoal, [empresaIds]);
+  const { rows: totalGoalRows } = await radarPool.query(sqlTotalMonthGoal, [
+    empresaIds,
+    args[1], 
+  ]);
    const totalMonthGoal = toNumber(totalGoalRows?.[0]?.total_goal);
 
   
@@ -348,6 +349,13 @@ export default async function AdminRankingPage({
     weekly_bonus: toNumber(r.weekly_bonus),
   }));
 
+  const totalMonthSold = sellers.reduce((acc, s) => acc + (Number.isFinite(s.net_sales) ? s.net_sales : 0), 0);
+
+  const totalMonthPct = totalMonthGoal > 0
+    ? (totalMonthSold / totalMonthGoal) * 100
+    : 0;
+
+
   const weekLabel = `${fmtBRShort(monday)} — ${fmtBRShort(friday)}`;
 
   return (
@@ -355,6 +363,8 @@ export default async function AdminRankingPage({
       weekOffset={weekOffset}
       weekLabel={weekLabel}
       totalMonthGoal={totalMonthGoal}
+      totalMonthSold={totalMonthSold}
+      totalMonthPct={totalMonthPct}
       sellers={sellers}
     />
   );
