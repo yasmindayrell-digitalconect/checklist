@@ -44,7 +44,7 @@ export default function DailyGoalCard({
 
   const toneClasses =
     status.tone === "green"
-      ? "bg-green-50 text-green-700 border-green-100"
+      ? "bg-[#80ef80]/20 text-[#42cd42] border-green-100"
       : status.tone === "red"
       ? "bg-red-50 text-red-700 border-red-100"
       : "bg-yellow-50 text-yellow-700 border-yellow-100";
@@ -52,32 +52,32 @@ export default function DailyGoalCard({
   return (
     <div className="rounded-2xl bg-white border border-gray-100 shadow-lg p-6">
       <div className="flex items-start justify-between gap-4">
-        <div className="text-sm font-semibold text-[#212529]">Metas</div>
+        <div className="text-sm font-semibold text-[#212529]">Meta Mensal</div>
         <div className={`px-3 py-1.5 rounded-full border text-xs font-semibold ${toneClasses}`}>
           {status.label}
         </div>
       </div>
 
-      <div className="mt-4 grid gap-1 grid-cols-2 sm:grid-cols-2">
-        <div className="rounded-xl border border-gray-200 p-3">
-          <div className="text-xs text-[#6c757d]">Meta</div>
+      <div className="mt-4 grid gap-2 grid-cols">
+        <div className=" flex justify-between rounded-xl border bg-gray-50 border-gray-200 p-3">
+          <div className="text-[#6c757d]">Meta</div>
           <div className="text-base font-semibold text-[#212529]">{formatBRL(safeGoal)}</div>
         </div>
 
-        <div className="rounded-xl border border-gray-200 p-3">
-          <div className="text-xs text-[#6c757d]">Vendido (líquido)</div>
-          <div className="text-base font-semibold text-[#212529]">{formatBRL(safeNetSales)}</div>
+        <div className="flex justify-between rounded-xl border bg-gray-50 border-gray-200 p-3">
+          <div className=" text-[#6c757d]">Vendido</div>
+          <div className="text-base font-semibold text-[#42cd42]">{formatBRL(safeNetSales)}</div>
         </div>
 
-        <div className="rounded-xl border border-gray-200 p-3">
-          <div className="text-xs text-[#6c757d]">Falta</div>
+        <div className="flex justify-between rounded-xl border bg-gray-50 border-gray-200 p-3">
+          <div className=" text-[#6c757d]">Falta</div>
           <div className="text-base font-semibold text-[#212529]">{formatBRL(remainingGoal)}</div>
         </div>
 
-        <div className="rounded-xl border border-gray-200 p-3">
-          <div className="text-xs text-[#6c757d]">Vendas / dia</div>
+        {/* <div className="flex justify-between rounded-xl border bg-gray-50 border-gray-200 p-3">
+          <div className="text-[#6c757d]">Venda / dia</div>
           <div className="text-base font-semibold text-[#212529]">{formatBRL(perDay)}</div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Target, LayoutGrid } from "lucide-react";
+import { Target, LayoutGrid, ShieldUser } from "lucide-react";
 
 function tabClass(active: boolean) {
   return [
@@ -13,19 +13,17 @@ function tabClass(active: boolean) {
   ].join(" ");
 }
 
-export default function HeaderTabs() {
+export default function HeaderTabs({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
 
   const isCrm = pathname === "/" || pathname.startsWith("/crm") || pathname.startsWith("/vendas");
   const isDash = pathname.startsWith("/dashboard");
+  const isAdminDash = pathname.startsWith("/adminDashboard");
 
   return (
-    <nav
-      className="inline-flex items-center gap-1 rounded-2xl p-1 "
-      aria-label="Navegação"
-    >
+    <nav className="inline-flex items-center gap-1 rounded-2xl p-1" aria-label="Navegação">
       <Link href="/" className={tabClass(isCrm)}>
-        <Target className="truncate h-4 w-4 " />
+        <Target className="truncate h-4 w-4" />
         CRM/Vendas
       </Link>
 
@@ -33,8 +31,13 @@ export default function HeaderTabs() {
         <LayoutGrid className="h-4 w-4" />
         Dashboard
       </Link>
+
+      {isAdmin && (
+        <Link href="/ranking" className={tabClass(isAdminDash)}>
+          <ShieldUser className="h-4 w-4" />
+          ranking
+        </Link>
+      )}
     </nav>
   );
 }
-            
-

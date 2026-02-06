@@ -100,4 +100,11 @@ export type SellerKpiRow = {
 
   goal_meta: number;
   pct_achieved: number;
+
+  
+  weekly_meta: number;          // meta_semanal
+  weekly_realized: number;      // realizado
+  weekly_pct_achieved: number;  // percentual_atingido
+  weekly_missing_value: number; // falta_valor
+  weekly_bonus: number;         // bonificacao
 }
