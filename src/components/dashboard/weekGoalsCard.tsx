@@ -5,9 +5,9 @@ import React, { useMemo } from "react";
 type Props = {
   weekly_meta: number;
   weekly_realized: number;
-  weekly_pct_achieved: number;
+  weekly_pct_achieved: number; // 0-100+
   weekly_missing_value: number;
-  weekly_bonus: number;
+  weekly_bonus: number; // (pode ignorar, vou calcular aqui)
 };
 
 function clamp(n: number, min: number, max: number) {
@@ -56,15 +56,30 @@ export default function WeekGoalCard({
   weekly_realized,
   weekly_pct_achieved,
   weekly_missing_value,
-  weekly_bonus,
 }: Props) {
   const pct = Number.isFinite(weekly_pct_achieved) ? weekly_pct_achieved : 0;
-  const barPct = useMemo(() => clamp(pct, 0, 100), [pct]);
 
-  const hit = weekly_meta > 0 && weekly_realized >= weekly_meta;
+  const hit100 = weekly_meta > 0 && weekly_realized >= weekly_meta;
+
+  // Quando bate 100%, a barra passa a escalar até 110
+  const maxScale = 100;
+
+  // Barra principal (0 -> maxScale)
+  const barMainPct = useMemo(() => {
+    const scaled = (pct / maxScale) * 100;
+    return clamp(scaled, 0, 100);
+  }, [pct, maxScale]);
+
+  // “pedacinho” da super meta: 100% -> 110% (só aparece após 100)
+  // largura em % do container (cada 1% em super-meta = 100/110 do container)
+
+  // Bonificação só depois de 100%
+  const showBonus = hit100;
+  const bonusRate =  0.0005; // 0,1% ou 0,05%
+  const bonusValue = showBonus ? weekly_realized * bonusRate : 0;
 
   return (
-    <div className="w-full max-w-sm rounded-2xl bg-white p-4 shadow-lg border border-gray-100">
+    <div className="w-full rounded-2xl bg-white p-4 shadow-lg border border-gray-100">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-slate-900">Meta da semana</h3>
@@ -72,12 +87,14 @@ export default function WeekGoalCard({
         <span
           className={[
             "text-[11px] font-semibold px-2 py-0.5 rounded-full border whitespace-nowrap",
-            hit
+            hit100
+              ? "bg-amber-50 text-amber-700 border-amber-200"
+              : hit100
               ? "bg-emerald-50 text-emerald-700 border-emerald-200"
               : "bg-slate-50 text-slate-600 border-slate-200",
           ].join(" ")}
         >
-          {hit ? "Bateu! 🏆" : "Em andamento"}
+          {hit100 ? "Bateu! 🏆" : "Em andamento"}
         </span>
       </div>
 
@@ -98,47 +115,45 @@ export default function WeekGoalCard({
           </p>
         </div>
 
-        <div className="h-2.5 w-full rounded-full bg-slate-100 border border-slate-200 overflow-hidden">
+        <div className="relative h-2.5 w-full rounded-full bg-slate-100 border border-slate-200 overflow-hidden">
+          {/* Preenchimento principal */}
           <div
             className={[
-              "h-full rounded-full transition-all",
-              hit ? "bg-emerald-500" : "bg-blue-600",
+              "absolute left-0 top-0 h-full rounded-full transition-all",
+              hit100 ? "bg-[#80ef80]" : "bg-blue-600",
             ].join(" ")}
-            style={{ width: `${barPct}%` }}
+            style={{ width: `${barMainPct}%` }}
           />
-        </div>
 
-        {!hit && weekly_missing_value > 0 ? (
-          <p className="mt-2 text-[11px] text-slate-500">
-            Falta{" "}
-            <span className="font-semibold text-slate-700">
-              {formatBRL(weekly_missing_value)}
-            </span>
+    
+
+          {/* Marcador visual do 100% quando escala 0..110 */}
+            </div>
+
+            {hit100 && <div className="flex justify-end">
+              👑
+            </div>}
+        {!hit100 && weekly_missing_value > 0 ? (
+          <p className="mt-2 text-xs text-slate-500">
+            Falta <b>{formatBRL(weekly_missing_value)}</b> para sua bonificação!
           </p>
         ) : null}
       </div>
 
-      {/* Bonificação */}
-      <div className="mt-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3">
-        <div className="text-[10px] font-semibold tracking-wide text-slate-500 uppercase text-center">
-          Bonificação (0,05%)
-        </div>
-
-        <div
-          className={[
-            "mt-1 text-center text-xl font-extrabold tabular-nums",
-            hit ? "text-emerald-600" : "text-slate-500",
-          ].join(" ")}
-        >
-          {formatBRL(weekly_bonus)}
-        </div>
-
-        {!hit ? (
-          <div className="mt-1 text-center text-[11px] text-slate-500">
-            Só ao bater a meta.
+      {/* Bonificação (só depois de 100%) */}
+      {showBonus ? (
+        <div className="mt-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3">
+          <div className="text-[10px] font-semibold tracking-wide text-slate-500 uppercase text-center">
+            Bonificação 0,05%
           </div>
-        ) : null}
-      </div>
+
+          <div className="mt-1 text-center text-xl font-extrabold tabular-nums text-emerald-600">
+            {formatBRL(bonusValue)}
+          </div>
+
+
+        </div>
+      ) : null}
     </div>
   );
 }

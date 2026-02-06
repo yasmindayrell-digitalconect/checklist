@@ -172,13 +172,12 @@ export default async function Page() {
   if (session.role === "seller") {
     kpiArgs.push(session.sellerId);
     kpiWhere = `v.vendedor_id::int = $${kpiArgs.length}::int`;
-    kpiWhereWeekly = `m.vendedor_id::int = $${kpiArgs.length}::int`;
+    kpiWhereWeekly = `f.funcionario_id::int = $${kpiArgs.length}::int`;
   } else if (session.role === "admin") {
     kpiArgs.push(sellerIds);
     kpiWhere = `v.vendedor_id IS NOT NULL AND v.vendedor_id::int = ANY($${kpiArgs.length}::int[])`;
-    kpiWhereWeekly = `m.vendedor_id IS NOT NULL AND m.vendedor_id::int = ANY($${kpiArgs.length}::int[])`;
+    kpiWhereWeekly = `f.funcionario_id IS NOT NULL AND f.funcionario_id::int = ANY($${kpiArgs.length}::int[])`;
   }
-
   const sqlKpisNetSales = `
     WITH
     /* =========================
@@ -191,14 +190,43 @@ export default async function Page() {
         (extract(year from date_trunc('month', CURRENT_DATE))::int * 100
           + extract(month from date_trunc('month', CURRENT_DATE))::int) AS ano_mes
     ),
-    calendario AS (
-      SELECT
-        COUNT(*) FILTER (WHERE EXTRACT(DOW FROM d) BETWEEN 1 AND 5)::int AS uteis_mes,
-        COUNT(*) FILTER (WHERE EXTRACT(DOW FROM d) BETWEEN 1 AND 5 AND d <= CURRENT_DATE)::int AS uteis_corridos,
-        COUNT(*) FILTER (WHERE EXTRACT(DOW FROM d) BETWEEN 1 AND 5 AND d > CURRENT_DATE)::int AS uteis_restantes
-      FROM periodo p
-      CROSS JOIN LATERAL generate_series(p.dt_ini, p.dt_fim, '1 day'::interval) d
-    ),
+feriados_periodo AS (
+  SELECT feriado_id::date AS dt_feriado
+  FROM public.feriados
+  CROSS JOIN periodo p
+  WHERE feriado_id::date BETWEEN p.dt_ini AND p.dt_fim
+),
+  calendario AS (
+    SELECT
+      COUNT(*) FILTER (
+        WHERE EXTRACT(DOW FROM d) BETWEEN 1 AND 5
+          AND NOT EXISTS (
+            SELECT 1 FROM feriados_periodo fp
+            WHERE fp.dt_feriado = d::date
+          )
+      )::int AS uteis_mes,
+
+      COUNT(*) FILTER (
+        WHERE EXTRACT(DOW FROM d) BETWEEN 1 AND 5
+          AND d <= CURRENT_DATE
+          AND NOT EXISTS (
+            SELECT 1 FROM feriados_periodo fp
+            WHERE fp.dt_feriado = d::date
+          )
+      )::int AS uteis_corridos,
+
+      COUNT(*) FILTER (
+        WHERE EXTRACT(DOW FROM d) BETWEEN 1 AND 5
+          AND d > CURRENT_DATE
+          AND NOT EXISTS (
+            SELECT 1 FROM feriados_periodo fp
+            WHERE fp.dt_feriado = d::date
+          )
+      )::int AS uteis_restantes
+    FROM periodo p
+    CROSS JOIN LATERAL generate_series(p.dt_ini, p.dt_fim, '1 day'::interval) d
+  ),
+
     vendas_consolidadas AS (
       SELECT
         o.vendedor_id,
@@ -303,28 +331,54 @@ export default async function Page() {
     /* =========================
        SEMANAL (igual sua query)
        ========================= */
-  params AS (
-  SELECT (date_trunc('month', CURRENT_DATE) + interval '1 month - 1 day')::date AS data_ref
+  /* =========================
+   SEMANAL (query do chefe / semana atual)
+   ========================= */
+params AS (
+  SELECT CURRENT_DATE::date AS data_ref
 ),
+
 semana_ref AS (
   SELECT
     date_trunc('week', p.data_ref)::date AS semana_ini,
-    (date_trunc('week', p.data_ref)::date + 6) AS semana_fim
+    (date_trunc('week', p.data_ref)::date + 4) AS semana_fim
   FROM params p
 ),
+
 vendas_semana AS (
   SELECT
     o.vendedor_id::bigint AS vendedor_id,
+
     SUM(COALESCE(o.valor_pedido, 0)) AS valor_bruto_total,
-    SUM(CASE WHEN o.totalmente_devolvido = 'N' THEN COALESCE(o.valor_outras_desp_manual, 0) ELSE 0 END) AS despesa_operacional,
-    SUM(CASE WHEN o.totalmente_devolvido = 'S' THEN COALESCE(o.valor_outras_desp_manual, 0) ELSE 0 END) AS ajuste_desp_estorno,
-    SUM(COALESCE(o.valor_frete_processado, 0) + COALESCE(o.valor_frete_extra_manual, 0)) AS total_frete
+
+    SUM(
+      CASE
+        WHEN o.totalmente_devolvido = 'N'
+          THEN COALESCE(o.valor_outras_desp_manual, 0)
+        ELSE 0
+      END
+    ) AS despesa_operacional,
+
+    SUM(
+      CASE
+        WHEN o.totalmente_devolvido = 'S'
+          THEN COALESCE(o.valor_outras_desp_manual, 0)
+        ELSE 0
+      END
+    ) AS ajuste_desp_estorno,
+
+    SUM(
+      COALESCE(o.valor_frete_processado, 0)
+      + COALESCE(o.valor_frete_extra_manual, 0)
+    ) AS total_frete
+
   FROM public.orcamentos o
   JOIN semana_ref sr ON TRUE
   WHERE o.data_recebimento::date BETWEEN sr.semana_ini AND sr.semana_fim
     AND upper(coalesce(o.cancelado,'N')) NOT IN ('S','SIM','1','T','TRUE')
   GROUP BY o.vendedor_id
 ),
+
 devolucoes_semana AS (
   SELECT
     rd.vendedor_id::bigint AS vendedor_id,
@@ -335,6 +389,7 @@ devolucoes_semana AS (
     AND rd.vendedor_id IS NOT NULL
   GROUP BY rd.vendedor_id
 ),
+
 meta_semanal AS (
   SELECT
     ms.vendedor_id::bigint AS vendedor_id,
@@ -345,10 +400,12 @@ meta_semanal AS (
    AND ms.data_fim::date    = sr.semana_fim
   GROUP BY ms.vendedor_id
 ),
+
 semanal AS (
   SELECT
-    m.vendedor_id::int AS seller_id,
+    f.funcionario_id::int AS seller_id,
     COALESCE(m.meta, 0)::numeric AS weekly_meta,
+
     (
       COALESCE(v.valor_bruto_total, 0)
       - COALESCE(d.total_credito_devolucao, 0)
@@ -356,11 +413,15 @@ semanal AS (
       - COALESCE(v.despesa_operacional, 0)
       - COALESCE(v.total_frete, 0)
     )::numeric AS weekly_realized
+
   FROM meta_semanal m
+  JOIN public.funcionarios f ON f.funcionario_id = m.vendedor_id
   LEFT JOIN vendas_semana v ON v.vendedor_id = m.vendedor_id
   LEFT JOIN devolucoes_semana d ON d.vendedor_id = m.vendedor_id
-  WHERE ${kpiWhereWeekly}
+  WHERE upper(coalesce(f.ativo,'S')) NOT IN ('N','NAO','0','F','FALSE')
+    AND (${kpiWhereWeekly})
 )
+
 
 
 
