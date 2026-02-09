@@ -393,13 +393,14 @@ devolucoes_semana AS (
 meta_semanal AS (
   SELECT
     ms.vendedor_id::bigint AS vendedor_id,
-    SUM(ms.valor_meta)::numeric AS meta
+    SUM(COALESCE(ms.valor_meta, 0))::numeric AS meta
   FROM public.metas_semanal ms
   JOIN semana_ref sr
-    ON ms.data_inicio::date = sr.semana_ini
-   AND ms.data_fim::date    = sr.semana_fim
+    ON ms.data_inicio::date <= sr.semana_ini
+   AND ms.data_fim::date    >= sr.semana_fim
   GROUP BY ms.vendedor_id
 ),
+
 
 semanal AS (
   SELECT
