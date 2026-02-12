@@ -44,8 +44,10 @@ function toNumber(v: unknown): number {
 
 type SP = { weekOffset?: string };
 
-export default async function GoalsPage({ searchParams }: { searchParams?: SP }) {
+export default async function GoalsPage({ searchParams }: { searchParams?: Promise<SP> }) {
   noStore();
+  const sp = await searchParams; // ✅ Next 15
+  const weekOffset = clampInt(Number(sp?.weekOffset ?? 0), -104, 104);
 
   const session = await getServerSession();
   if (!session) redirect("/select-user");
@@ -58,7 +60,6 @@ export default async function GoalsPage({ searchParams }: { searchParams?: SP })
   const empresaIds = [1, 2, 3, 5, 6];
 
   // semana de referência (permite navegar)
-  const weekOffset = clampInt(Number(searchParams?.weekOffset ?? 0), -104, 104);
   const dataRef = new Date();
   dataRef.setDate(dataRef.getDate() + weekOffset * 7);
 
@@ -71,7 +72,7 @@ export default async function GoalsPage({ searchParams }: { searchParams?: SP })
     refMonday.getFullYear() * 100 + (refMonday.getMonth() + 1);
 
   // semanas (últimas 3) relativas ao weekOffset: [ref, ref-1, ref-2]
-  const weekRefs = [0, -1, -2].map((delta) => {
+  const weekRefs = [-4, -8, -12].map((delta) => {
     const d = new Date(refMonday);
     d.setDate(d.getDate() + delta * 7);
     const { monday, friday } = getWeekRangeFromRef(d);
@@ -323,8 +324,14 @@ ORDER BY s.seller_name NULLS LAST;
       monthly_meta: toNumber(r.monthly_meta),
       weekly_meta_month_accum: toNumber(r.weekly_meta_month_accum),
       weekly_last3: weeklyLast3,
+
+      // ✅ semana “editável” = semana que está na tela (w1 / ref week)
+      current_week_start: new Date(w1.monday.getFullYear(), w1.monday.getMonth(), w1.monday.getDate()).toISOString(),
+      current_week_end: new Date(w1.friday.getFullYear(), w1.friday.getMonth(), w1.friday.getDate()).toISOString(),
+      current_week_meta: toNumber(r.w1_meta),
     };
   });
+
 
   const totalWeeklyMetaMonth = sellers.reduce(
     (acc, s) => acc + (Number.isFinite(s.weekly_meta_month_accum) ? s.weekly_meta_month_accum : 0),

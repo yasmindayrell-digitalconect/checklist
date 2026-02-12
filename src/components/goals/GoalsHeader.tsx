@@ -37,7 +37,7 @@ function MiniStat({
       <div
         className={[
           "mt-0.5 text-base font-semibold tracking-tight",
-          emphasize ? "text-[#2323ff]" : "text-[#212529]",
+          emphasize ? "text-[#00ff00]" : "text-[#212529]",
         ].join(" ")}
       >
         {value}
@@ -55,37 +55,16 @@ export default function GoalsHeader({ header }: { header: GoalsHeaderData }) {
   );
   const barPct = useMemo(() => clamp(monthPct, 0, 100), [monthPct]);
 
-  const status = useMemo(() => {
-    if (monthPct >= 100)
-      return {
-        label: "Meta batida",
-        cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
-      };
-    if (monthPct >= 85)
-      return {
-        label: "Quase lá",
-        cls: "bg-amber-50 text-amber-700 border-amber-200",
-      };
-    return {
-      label: "Em andamento",
-      cls: "bg-slate-50 text-slate-700 border-slate-200",
-    };
-  }, [monthPct]);
-
   return (
     <div className="mb-10 grid gap-3 ">
-      <div className="relative overflow-hidden rounded-3xl border border-gray-200 bg-gray-200 p-5 shadow-xl">
-        {/* deco */}
-        <div className="pointer-events-none absolute -top-28 -right-28 h-72 w-72 rounded-full blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-28 -left-28 h-72 w-72 rounded-full bg-slate-900/5 blur-3xl" />
-
+      <div className="relative overflow-hidden rounded-3xl border border-gray-200 bg-white p-5 shadow-md shadow-[#80ef80]/50">
         <div className="relative grid gap-4 lg:grid-cols-12">
           {/* LETF (weekly highlight) */}
           <div className="lg:col-span-4">
             <div className="flex flex-col justify-between h-full rounded-3xl border border-gray-200 bg-gray-50 p-4 shadow-xs">
               <div className="flex items-start justify-between gap-3">
-                <div className="p-2">
-                  <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                <div className="p-5 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                  <div className=" text-[11px] font-semibold tracking-wide text-gray-500 ">
                     Meta Geral 
                   </div>
                   <div className="mt-1 text-2xl font-semibold tracking-tight text-[#212529]">
@@ -93,8 +72,8 @@ export default function GoalsHeader({ header }: { header: GoalsHeaderData }) {
                   </div>
                 </div>
 
-                <div className="py-2 px-3">
-                  <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                <div className="p-5 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                  <div className="text-[11px] font-semibold tracking-wide text-gray-500">
                     Meta semanal acumulada no mês
                   </div>
                   <div className="mt-1 text-2xl font-semibold tracking-tight text-[#212529]">
@@ -128,7 +107,7 @@ export default function GoalsHeader({ header }: { header: GoalsHeaderData }) {
 
               <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-gray-100">
                 <div
-                  className="h-3 rounded-full bg-[#2323ff] transition-[width] duration-500 ease-out"
+                  className="h-3 rounded-full bg-[#80ef80] transition-[width] duration-500 ease-out"
                   style={{ width: `${barPct}%` }}
                   aria-label="Progresso do mês"
                 />
