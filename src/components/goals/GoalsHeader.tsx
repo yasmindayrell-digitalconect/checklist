@@ -11,7 +11,7 @@ function formatBRL(v: number) {
   }).format(Number.isFinite(v) ? v : 0);
 }
 
-function formatPct(v: number, decimals = 1) {
+function formatPct(v: number, decimals = 2) {
   const n = Number.isFinite(v) ? v : 0;
   return `${n.toFixed(decimals)}%`;
 }
@@ -74,7 +74,7 @@ export default function GoalsHeader({ header }: { header: GoalsHeaderData }) {
 
                 <div className="p-5 bg-white rounded-2xl border border-gray-100 shadow-sm">
                   <div className="text-[11px] font-semibold tracking-wide text-gray-500">
-                    Meta semanal acumulada no mês
+                    Meta semanal acumulada / mês
                   </div>
                   <div className="mt-1 text-2xl font-semibold tracking-tight text-[#212529]">
                     {formatBRL(header.totalWeeklyMetaMonth)}
@@ -85,17 +85,17 @@ export default function GoalsHeader({ header }: { header: GoalsHeaderData }) {
               <button
                 type="button"
                 onClick={() => setShowBranches((v) => !v)}
-                className="mt-4 inline-flex w-1/3 items-center justify-center rounded-2xl bg-white px-3 py-2 text-sm font-semibold text-[#212529] shadow-xs transition hover:-translate-y-0.5 hover:bg-gray-50 active:translate-y-0"
+                className="mt-4 inline-flex w-1/3 items-center justify-center border border-gray-200  rounded-2xl bg-white px-3 py-2 text-sm font-semibold text-[#212529] shadow-xs transition hover:-translate-y-0.5 hover:bg-gray-50 active:translate-y-0"
               >
                 {showBranches ? "Ocultar meta por filial" : "Ver meta por filial"}
               </button>
             </div>
           </div>
           {/* rigth (main month area) */}
-          <div className="h-full lg:col-span-8 shadow-xs">
+          <div className="lg:col-span-8 shadow-xs">
 
             {/* Progress block */}
-            <div className="rounded-3xl border border-gray-200 bg-linear-to-br from-slate-50 to-white p-4">
+            <div className=" h-full rounded-3xl border border-gray-200 bg-slate-50 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-sm font-semibold text-[#212529]">
                   Progresso do mês
@@ -107,7 +107,7 @@ export default function GoalsHeader({ header }: { header: GoalsHeaderData }) {
 
               <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-gray-100">
                 <div
-                  className="h-3 rounded-full bg-[#80ef80] transition-[width] duration-500 ease-out"
+                  className="h-3 rounded-full bg-linear-to-r from-[#80ef80] to-[#01cf01] transition-[width] duration-500 ease-out"
                   style={{ width: `${barPct}%` }}
                   aria-label="Progresso do mês"
                 />
@@ -157,34 +157,36 @@ export default function GoalsHeader({ header }: { header: GoalsHeaderData }) {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
-                      Filial
+                      {b.name}
                     </div>
                     <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] font-semibold text-gray-700">
                       {b.empresa_id}
                     </span>
                   </div>
-
-                  <div className="mt-2 text-base font-semibold tracking-tight text-[#212529]">
-                    {formatBRL(b.goal)}
+                  <div className="flex items-baseline justify-between">
+                    <div className="mt-2 text-base font-semibold tracking-tight text-[#212529]">
+                      {formatBRL(b.goal)}
+                    </div>
+                    <div  className="mt-2 text-sm tracking-tight text-[#727c87]">
+                      Falta: {formatBRL(b.goal - b.realized)}
+                    </div>
                   </div>
-
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-                    <div
-                      className="h-1.5 rounded-full bg-slate-300"
-                      style={{
-                        width: `${clamp(
-                          (b.goal / (header.totalCompanyGoal || 1)) * 100,
-                          0,
-                          100
-                        )}%`,
-                      }}
-                      aria-label={`Participação da filial ${b.empresa_id}`}
-                    />
-                  </div>
-
-                  <div className="mt-1 text-[11px] text-gray-500">
-                    Participação na meta geral
-                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                      <div
+                        className="h-1.5 rounded-full bg-linear-to-r from-[#80ef80] to-[#01cf01]"
+                        style={{
+                          width: `${clamp(
+                            (b.realized / (b.goal || 1)) * 100,
+                            0,
+                            100
+                          )}%`,
+                        }}
+                        aria-label={`Participação da filial ${b.empresa_id}`}
+                      />
+                    </div>
+                    <div className="text-[#80ef80] text-xs">{formatPct(b.pct)}</div>
+                  </div>                 
                 </div>
               ))}
             </div>

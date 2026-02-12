@@ -88,23 +88,117 @@ export default async function GoalsPage({ searchParams }: { searchParams?: Promi
   // (A) Metas do mês (empresa + filiais)
   // =========================================
   const sqlCompanyGoals = `
-    SELECT
-      m.empresa_id::bigint AS empresa_id,
-      COALESCE(SUM(COALESCE(m.meta, 0)), 0)::numeric AS meta
-    FROM public.metas m
-    WHERE m.empresa_id = ANY($1::bigint[])
-      AND m.ano_mes = $2::bigint
-    GROUP BY 1
-    ORDER BY 1;
+  WITH
+    params AS (
+      SELECT $2::date AS ref_monday
+    ),
+    periodo AS (
+      SELECT
+        date_trunc('month', p.ref_monday)::date AS dt_ini,
+        (date_trunc('month', p.ref_monday) + interval '1 month - 1 day')::date AS dt_fim
+      FROM params p
+    ),
+
+    -- metas do mês por filial
+    metas_filial AS (
+      SELECT
+        m.empresa_id::bigint AS empresa_id,
+        COALESCE(SUM(COALESCE(m.meta, 0)), 0)::numeric AS meta
+      FROM public.metas m
+      WHERE m.empresa_id = ANY($1::bigint[])
+        AND m.ano_mes = $3::bigint
+      GROUP BY 1
+    ),
+
+    -- vendas do mês por filial
+    vendas AS (
+      SELECT
+        o.empresa_id::bigint AS empresa_id,
+        SUM(COALESCE(o.valor_pedido, 0))::numeric AS valor_bruto_total,
+        SUM(
+          CASE WHEN COALESCE(o.totalmente_devolvido,'N') = 'N'
+              THEN COALESCE(o.valor_outras_desp_manual, 0)
+              ELSE 0 END
+        )::numeric AS despesa_operacional,
+        SUM(
+          CASE WHEN COALESCE(o.totalmente_devolvido,'N') = 'S'
+              THEN COALESCE(o.valor_outras_desp_manual, 0)
+              ELSE 0 END
+        )::numeric AS ajuste_desp_estorno,
+        SUM(
+          COALESCE(o.valor_frete_processado, 0) + COALESCE(o.valor_frete_extra_manual, 0)
+        )::numeric AS total_frete
+      FROM public.orcamentos o
+      CROSS JOIN periodo p
+      WHERE o.data_recebimento >= p.dt_ini
+        AND o.data_recebimento < (p.dt_fim + 1)
+        AND COALESCE(o.cancelado,'N') = 'N'
+        AND o.empresa_id = ANY($1::bigint[])
+      GROUP BY 1
+    ),
+
+    -- devoluções do mês por filial
+    dev AS (
+      SELECT
+        rd.empresa_id::bigint AS empresa_id,
+        SUM(COALESCE(ird.quantidade * ird.preco_venda, 0))::numeric AS total_dev_valor
+      FROM public.itens_requisicoes_devolucoes ird
+      JOIN public.requisicoes_devolucoes rd ON ird.requisicao_id = rd.requisicao_id
+      CROSS JOIN periodo p
+      WHERE ird.data_hora_alteracao >= p.dt_ini
+        AND ird.data_hora_alteracao < (p.dt_fim + 1)
+        AND rd.empresa_id = ANY($1::bigint[])
+      GROUP BY 1
+    ),
+
+    realizado AS (
+      SELECT
+        v.empresa_id,
+        COALESCE(
+          (
+            (COALESCE(v.valor_bruto_total, 0) - COALESCE(d.total_dev_valor, 0) - COALESCE(v.ajuste_desp_estorno, 0))
+            - COALESCE(v.despesa_operacional, 0)
+            - COALESCE(v.total_frete, 0)
+          ),
+          0
+        )::numeric AS net_sales
+      FROM vendas v
+      LEFT JOIN dev d ON d.empresa_id = v.empresa_id
+    )
+
+  SELECT
+    e.empresa_id::bigint AS empresa_id,
+    COALESCE(e.nome_resumido, '')::text AS nome_resumido,
+
+    COALESCE(mf.meta, 0)::numeric AS meta,
+    COALESCE(r.net_sales, 0)::numeric AS realized,
+
+    CASE
+      WHEN COALESCE(mf.meta, 0) > 0
+      THEN (COALESCE(r.net_sales, 0) / mf.meta) * 100
+      ELSE 0
+    END::numeric AS pct
+  FROM public.empresas e
+  LEFT JOIN metas_filial mf ON mf.empresa_id = e.empresa_id
+  LEFT JOIN realizado r ON r.empresa_id = e.empresa_id
+  WHERE e.empresa_id = ANY($1::bigint[])
+  ORDER BY e.empresa_id;
   `;
+
+
   const { rows: companyGoalRows } = await radarPool.query(sqlCompanyGoals, [
     empresaIds,
+    new Date(refMonday.getFullYear(), refMonday.getMonth(), refMonday.getDate()),
     BigInt(yearMonth),
   ]);
 
+
   const byBranch = companyGoalRows.map((r: any) => ({
     empresa_id: Number(r.empresa_id),
+    name: String(r.nome_resumido ?? ""),
     goal: toNumber(r.meta),
+    realized: toNumber(r.realized),
+    pct: toNumber(r.pct),
   }));
   const totalCompanyGoal = byBranch.reduce((acc, b) => acc + (Number.isFinite(b.goal) ? b.goal : 0), 0);
 
@@ -112,65 +206,66 @@ export default async function GoalsPage({ searchParams }: { searchParams?: Promi
   // (B) KPIs de vendido no mês (net_sales total) para % e falta
   //     (mesma lógica do ranking, mas agregada)
   // =========================================
+
   const sqlMonthSold = `
-WITH
-  params AS (
-    SELECT
-      $1::date AS ref_monday
-  ),
-  periodo AS (
-    SELECT
-      date_trunc('month', p.ref_monday)::date AS dt_ini,
-      (date_trunc('month', p.ref_monday) + interval '1 month - 1 day')::date AS dt_fim
-    FROM params p
-  ),
-  vendas AS (
-    SELECT
-      o.vendedor_id::int AS seller_id,
-      SUM(COALESCE(o.valor_pedido, 0))::numeric AS valor_bruto_total,
-      SUM(
-        CASE WHEN COALESCE(o.totalmente_devolvido,'N') = 'N'
-             THEN COALESCE(o.valor_outras_desp_manual, 0)
-             ELSE 0 END
-      )::numeric AS despesa_operacional,
-      SUM(
-        CASE WHEN COALESCE(o.totalmente_devolvido,'N') = 'S'
-             THEN COALESCE(o.valor_outras_desp_manual, 0)
-             ELSE 0 END
-      )::numeric AS ajuste_desp_estorno,
-      SUM(
-        COALESCE(o.valor_frete_processado, 0) + COALESCE(o.valor_frete_extra_manual, 0)
-      )::numeric AS total_frete
-    FROM public.orcamentos o
-    CROSS JOIN periodo p
-    WHERE o.data_recebimento >= p.dt_ini
-      AND o.data_recebimento < (p.dt_fim + 1)
-      AND COALESCE(o.cancelado,'N') = 'N'
-      AND o.vendedor_id IS NOT NULL
-      AND (o.vendedor_id)::int = ANY($2::int[])
-    GROUP BY 1
-  ),
-  dev AS (
-    SELECT
-      rd.vendedor_id::int AS seller_id,
-      SUM(COALESCE(ird.quantidade * ird.preco_venda, 0))::numeric AS total_dev_valor
-    FROM public.itens_requisicoes_devolucoes ird
-    JOIN public.requisicoes_devolucoes rd ON ird.requisicao_id = rd.requisicao_id
-    CROSS JOIN periodo p
-    WHERE ird.data_hora_alteracao >= p.dt_ini
-      AND ird.data_hora_alteracao < (p.dt_fim + 1)
-      AND rd.vendedor_id IS NOT NULL
-      AND (rd.vendedor_id)::int = ANY($2::int[])
-    GROUP BY 1
-  )
-SELECT
-  COALESCE(SUM(
-    (COALESCE(v.valor_bruto_total, 0) - COALESCE(d.total_dev_valor, 0) - COALESCE(v.ajuste_desp_estorno, 0))
-    - COALESCE(v.despesa_operacional, 0)
-    - COALESCE(v.total_frete, 0)
-  ), 0)::numeric AS total_net_sales
-FROM vendas v
-LEFT JOIN dev d ON d.seller_id = v.seller_id;
+  WITH
+    params AS (
+      SELECT
+        $1::date AS ref_monday
+    ),
+    periodo AS (
+      SELECT
+        date_trunc('month', p.ref_monday)::date AS dt_ini,
+        (date_trunc('month', p.ref_monday) + interval '1 month - 1 day')::date AS dt_fim
+      FROM params p
+    ),
+    vendas AS (
+      SELECT
+        o.vendedor_id::int AS seller_id,
+        SUM(COALESCE(o.valor_pedido, 0))::numeric AS valor_bruto_total,
+        SUM(
+          CASE WHEN COALESCE(o.totalmente_devolvido,'N') = 'N'
+              THEN COALESCE(o.valor_outras_desp_manual, 0)
+              ELSE 0 END
+        )::numeric AS despesa_operacional,
+        SUM(
+          CASE WHEN COALESCE(o.totalmente_devolvido,'N') = 'S'
+              THEN COALESCE(o.valor_outras_desp_manual, 0)
+              ELSE 0 END
+        )::numeric AS ajuste_desp_estorno,
+        SUM(
+          COALESCE(o.valor_frete_processado, 0) + COALESCE(o.valor_frete_extra_manual, 0)
+        )::numeric AS total_frete
+      FROM public.orcamentos o
+      CROSS JOIN periodo p
+      WHERE o.data_recebimento >= p.dt_ini
+        AND o.data_recebimento < (p.dt_fim + 1)
+        AND COALESCE(o.cancelado,'N') = 'N'
+        AND o.vendedor_id IS NOT NULL
+        AND (o.vendedor_id)::int = ANY($2::int[])
+      GROUP BY 1
+    ),
+    dev AS (
+      SELECT
+        rd.vendedor_id::int AS seller_id,
+        SUM(COALESCE(ird.quantidade * ird.preco_venda, 0))::numeric AS total_dev_valor
+      FROM public.itens_requisicoes_devolucoes ird
+      JOIN public.requisicoes_devolucoes rd ON ird.requisicao_id = rd.requisicao_id
+      CROSS JOIN periodo p
+      WHERE ird.data_hora_alteracao >= p.dt_ini
+        AND ird.data_hora_alteracao < (p.dt_fim + 1)
+        AND rd.vendedor_id IS NOT NULL
+        AND (rd.vendedor_id)::int = ANY($2::int[])
+      GROUP BY 1
+    )
+  SELECT
+    COALESCE(SUM(
+      (COALESCE(v.valor_bruto_total, 0) - COALESCE(d.total_dev_valor, 0) - COALESCE(v.ajuste_desp_estorno, 0))
+      - COALESCE(v.despesa_operacional, 0)
+      - COALESCE(v.total_frete, 0)
+    ), 0)::numeric AS total_net_sales
+  FROM vendas v
+  LEFT JOIN dev d ON d.seller_id = v.seller_id;
   `;
 
   const { rows: monthSoldRows } = await radarPool.query(sqlMonthSold, [

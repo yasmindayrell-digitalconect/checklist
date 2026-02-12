@@ -35,7 +35,15 @@ export type GoalsHeaderData = {
   monthLabel: string;
 
   totalCompanyGoal: number;
-  byBranch: { empresa_id: number; goal: number }[];
+  byBranch: Array<{
+    empresa_id: number;
+    name: string;
+    goal: number;
+    realized: number;
+    pct: number;
+  }>;
+
+
 
   totalWeeklyMetaMonth: number;
 
@@ -76,7 +84,7 @@ export default function GoalsEditorClient({
         <div className="flex items-center gap-2">
           <Link
             href={`/ranking?weekOffset=${header.weekOffset}`}
-            className="flex flex-row gap-1 rounded-xl bg-[#a2f4a2]/80 px-3 py-2 text-sm font-semibold text-[#212529] hover:bg-gray-50"
+            className="flex flex-row gap-1 rounded-xl bg-[#80ef80] px-3 py-2 text-sm font-semibold text-[#212529] hover:bg-gray-50"
           >
             <ChevronLeft className="h-5 w-5" />
             Voltar ao ranking
@@ -125,7 +133,7 @@ export default function GoalsEditorClient({
 
 
       {/* lista */}
-      <div className="mt-4 grid gap-5 lg:grid-cols-2 2xl:grid-cols-4">
+      <div className="mt-4 grid gap-5 lg:grid-cols-3 2xl:grid-cols-4">
         {filtered.map((s) => (
           <SellerGoalsCard key={`${s.seller_id}-${header.weekOffset}`} row={s} />
         ))}
