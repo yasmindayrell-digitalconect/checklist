@@ -1,3 +1,5 @@
+//app\api\week-goals\route.ts
+
 import { NextResponse } from "next/server";
 import { radarPool } from "@/lib/Db";
 import { getServerSession } from "@/lib/serverSession";

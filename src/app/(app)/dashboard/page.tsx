@@ -111,13 +111,23 @@ export default async function Page() {
 
       ob.open_budget_id,
       ob.validade_orcamento_min,
+      ao_last.status AS orcamento_status,
 
       COALESCE(ct.contatos_json, '[]'::jsonb) AS contatos_json
     FROM open_budgets ob
     JOIN public.vw_web_clientes c ON c.cadastro_id = ob.cadastro_id
     LEFT JOIN contatos ct ON ct.cadastro_id = ob.cadastro_id
+
+    LEFT JOIN LATERAL (
+      SELECT ao.status
+      FROM public.acompanhamento_orcamentos ao
+      WHERE ao.orcamento_id = ob.open_budget_id
+      ORDER BY ao.data_hora_alteracao DESC NULLS LAST
+      LIMIT 1
+    ) ao_last ON TRUE
+
     WHERE COALESCE(c.cliente_ativo,'S') <> 'N'
-    ORDER BY ob.validade_orcamento_min ASC NULLS LAST
+    ORDER BY ob.validade_orcamento_min DESC NULLS LAST
     LIMIT 2000;
   `;
 
@@ -156,6 +166,7 @@ export default async function Page() {
 
       open_budget_id: r.orcamento_id == null ? null : Number(r.orcamento_id),
       validade_orcamento_min: r.validade_orcamento_min ? new Date(r.validade_orcamento_min).toISOString() : null,
+      orcamento_status: r.orcamento_status ?? null,
 
       contatos,
       is_carteira: isCarteira,

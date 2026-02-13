@@ -28,3 +28,20 @@
   background-color: #d8d8d8;
   border-radius: 9999px;
 }
+
+/* Scroll horizontal com a barra em cima (CSS hack) */
+.top-hscroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  /* joga a scrollbar pro "top" */
+  transform: rotateX(180deg);
+
+  /* opcional: deixa espaço estável pra barra (quando o SO mostra/oculta) */
+  scrollbar-gutter: stable both-edges;
+}
+
+/* desinverte só o conteúdo */
+.top-hscroll__content {
+  transform: rotateX(180deg);
+}
