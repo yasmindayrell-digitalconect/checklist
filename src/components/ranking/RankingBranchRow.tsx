@@ -16,22 +16,17 @@ export default function RankingBranchRow({ rows }: { rows: BranchRow[] }) {
         </div>
         <div className="h-px flex-1 bg-gray-200" />
       </div>
-
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
         {rows.map((r) => (
-          <BranchGoalCard
-            key={r.empresa_id}
-            id={r.empresa_id}
-            name={r.name}
-            goal={r.goal}
-            realized={r.realized}
-          />
-        ))}
-        {rows.map((r) => (
-          <BranchDailyCard
-            realized={r.realized_today}
-          />
-          
+          <div key={r.empresa_id} className="flex flex-col gap-2">
+            <BranchGoalCard
+              id={r.empresa_id}
+              name={r.name}
+              goal={r.goal}
+              realized={r.realized}
+            />
+            <BranchDailyCard realized={r.realized_today} />
+          </div>
         ))}
       </div>
     </div>
