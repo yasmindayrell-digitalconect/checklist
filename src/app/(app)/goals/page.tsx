@@ -3,11 +3,8 @@ import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/serverSession";
 import { radarPool } from "@/lib/Db";
-import GoalsDashboardClient, {
-  type GoalsHeaderData,
-  type SellerGoalsRow,
-  type WeekMetaItem,
-} from "@/components/goals/GoalsEditorClient";
+import GoalsDashboardClient from "@/components/goals/GoalsEditorClient";
+import {GoalsHeaderData, SellerGoalsRow, WeekMetaItem} from "@/types/goals"
 import { toNumber, fmtMonthBR, clampInt, fmtBRShort, getWeekRangeFromRef } from "@/app/utils"; 
 
 type SP = { weekOffset?: string };
