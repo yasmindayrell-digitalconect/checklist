@@ -1,19 +1,17 @@
 "use client";
 
 import type { OpenBudgetCard, SellerKpiRow } from "@/types/dashboard";
-import OpenBudgetsRow from "./OpenBudgetsRow";
-import BudgetAchieved from "./BudgetAchieved";
-import DailyGoalCard from "./GoalsCard";
-import WeekGoalCard from "./weekGoalsCard";
-import DaysCard from "./DaysCard";
-import DevolutionsCard from "./DevolutionCard";
-import MonthGoalCard from "./MonthGoalCard";
+import OpenBudgetsDashboard from "./(budgets)/OpenBudgetsDashboard";
+import WeekGoalCard from "./(cards)/weekGoalsCard";
+import DaysCard from "./(cards)/DaysCard";
+import DevolutionsCard from "./(cards)/DevolutionCard";
+import MonthGoalCard from "./(cards)/MonthGoalCard";
 
 export default function DashboardClient({
   openBudgetClients,
   sellerKpis,
 }: {
-  openBudgetClients: OpenBudgetCard[];   // ✅ AQUI
+  openBudgetClients: OpenBudgetCard[];  
   sellerKpis: SellerKpiRow[];
 }) {
   const kpi = sellerKpis?.[0] ?? null;
@@ -26,19 +24,6 @@ export default function DashboardClient({
             <p className="text-sm text-[#495057]">Sem dados de vendas no mês atual.</p>
           ) : (
             <div className="mt-4 grid gap-3 lg:gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-4 3xl:grid-cols-4 ">
-              {/* <BudgetAchieved
-                value={kpi.net_sales}
-                target={kpi.goal_meta}
-                numSales={kpi.total_sales_count}
-              />
-
-              <DailyGoalCard
-                netSales={kpi.net_sales}
-                goal={kpi.goal_meta}
-                workdaysInMonth={kpi.business_days_month}
-                workdaysElapsed={kpi.business_days_elapsed}
-                workdaysRemaining={kpi.business_days_remaining}
-              /> */}
              <MonthGoalCard
                 monthly_meta={kpi.goal_meta}
                 monthly_realized={kpi.net_sales}
@@ -70,7 +55,7 @@ export default function DashboardClient({
           )}
         </div>
 
-        <OpenBudgetsRow clients={openBudgetClients} />
+        <OpenBudgetsDashboard clients={openBudgetClients} />
       </div>
     </div>
   );

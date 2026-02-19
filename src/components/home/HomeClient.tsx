@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { ClienteComContatos } from "@/types/crm";
 import ChecklistBoard from "./ChecklistBoard";
 import CalendarModal from "./CalendarModal";
@@ -171,15 +171,6 @@ export default function HomeClient({ clients, nowISO }: Props) {
       alert("Não foi possível desfazer.");
     }
   }
-
-  useEffect(() => {
-    const openBudget = localClients.filter((c) => c.tem_orcamento_aberto);
-    const inBudgetColumn = localClients.filter((c) => getBoardColumn(c) === "budget_open");
-    const openBudgetButOk = localClients.filter(
-      (c) => c.tem_orcamento_aberto && getBoardColumn(c) === "ok"
-    );
-  }, [localClients]);
-
 
 
   const canUndoMap = useMemo(() => {

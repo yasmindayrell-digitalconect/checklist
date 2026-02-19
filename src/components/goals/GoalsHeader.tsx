@@ -1,24 +1,8 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import type { GoalsHeaderData } from "./GoalsEditorClient";
-
-function formatBRL(v: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 2,
-  }).format(Number.isFinite(v) ? v : 0);
-}
-
-function formatPct(v: number, decimals = 2) {
-  const n = Number.isFinite(v) ? v : 0;
-  return `${n.toFixed(decimals)}%`;
-}
-
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
+import {GoalsHeaderData} from "@/types/goals"
+import { formatBRL, formatPct, clamp } from "@/components/utils";
 
 function MiniStat({
   label,

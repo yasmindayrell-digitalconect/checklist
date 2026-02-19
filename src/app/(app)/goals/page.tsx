@@ -8,39 +8,7 @@ import GoalsDashboardClient, {
   type SellerGoalsRow,
   type WeekMetaItem,
 } from "@/components/goals/GoalsEditorClient";
-
-function clampInt(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
-
-// Semana (Seg–Sex) igual ao ranking (date_trunc('week') = segunda no Postgres)
-function getWeekRangeFromRef(ref: Date) {
-  const d = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate());
-  const jsDay = d.getDay(); // 0 dom ... 6 sáb
-  const diffToMonday = (jsDay + 6) % 7; // seg=0 ... dom=6
-  const monday = new Date(d);
-  monday.setDate(d.getDate() - diffToMonday);
-
-  const friday = new Date(monday);
-  friday.setDate(monday.getDate() + 4);
-
-  return { monday, friday };
-}
-
-function fmtBRShort(date: Date) {
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(date);
-}
-
-function fmtMonthBR(date: Date) {
-  return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(date);
-}
-
-function toNumber(v: unknown): number {
-  if (v == null) return 0;
-  if (typeof v === "number") return v;
-  const n = Number(String(v).replace(",", "."));
-  return Number.isFinite(n) ? n : 0;
-}
+import { toNumber, fmtMonthBR, clampInt, fmtBRShort, getWeekRangeFromRef } from "@/app/utils"; 
 
 type SP = { weekOffset?: string };
 
@@ -71,7 +39,6 @@ export default async function GoalsPage({ searchParams }: { searchParams?: Promi
   const yearMonth =
     refMonday.getFullYear() * 100 + (refMonday.getMonth() + 1);
 
-  // semanas (últimas 3) relativas ao weekOffset: [ref, ref-1, ref-2]
   const weekRefs = [0, -4, -8, -12].map((delta) => {
     const d = new Date(refMonday);
     d.setDate(d.getDate() + delta * 7);
@@ -340,8 +307,8 @@ WITH
     CROSS JOIN weeks w
     LEFT JOIN public.metas_semanal ms
       ON ms.vendedor_id::int = s.seller_id
-    AND ms.data_inicio = w.week_ini
-    AND ms.data_fim    = w.week_fim
+    AND ms.data_inicio::date <= w.week_ini
+    AND ms.data_fim::date    >= w.week_fim
     GROUP BY 1,2,3,4
   ),
 
@@ -368,8 +335,8 @@ WITH
     CROSS JOIN month_weeks mw
     LEFT JOIN public.metas_semanal ms
       ON ms.vendedor_id::int = s.seller_id
-    AND ms.data_inicio = mw.week_ini
-    AND ms.data_fim    = mw.week_fim
+    AND ms.data_inicio::date <= mw.week_ini
+    AND ms.data_fim::date    >= mw.week_fim
     GROUP BY 1
   )
 

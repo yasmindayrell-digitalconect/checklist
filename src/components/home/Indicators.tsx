@@ -21,14 +21,6 @@ function lastDayOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
 
-function daysRemainingInMonthInclusive(date: Date) {
-  const endOfMonth = lastDayOfMonth(date);
-  const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const diffMs = endOfMonth.getTime() - startOfDay.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  return diffDays + 1; // includes today
-}
-
 function isBusinessDay(date: Date) {
   const day = date.getDay(); // 0 Sun .. 6 Sat
   return day !== 0 && day !== 6;

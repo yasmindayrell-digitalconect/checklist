@@ -1,29 +1,10 @@
 "use client";
-
-import React, { useMemo } from "react";
-
+import { formatBRL , clamp, formatPct} from "@/components/utils";
 type Props = {
   monthly_meta: number;
   monthly_realized: number;
   monthly_pct_achieved: number; // 0-100+ (pode vir > 110)
 };
-
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
-
-function formatBRL(v: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 2,
-  }).format(Number.isFinite(v) ? v : 0);
-}
-
-function formatPct(v: number, decimals = 1) {
-  const n = Number.isFinite(v) ? v : 0;
-  return `${n.toFixed(decimals)}%`;
-}
 
 function StatRow({
   label,
@@ -62,17 +43,6 @@ export default function MonthGoalCard({
   const missingTo100 = Math.max(0, monthly_meta - monthly_realized);
   const missingTo110 = Math.max(0, monthly_meta * 1.1 - monthly_realized);
 
-  // Antes de 100%: barra 0..100
-  const barTo100 = useMemo(() => clamp(pct, 0, 100), [pct]);
-
-  // Depois de 100%: barra base fica 100% cheia
-  // e a “ponta” (10%) vai enchendo conforme 100..110
-  const superFillPct = useMemo(() => {
-    if (!hit100) return 0;
-    // progresso dentro do intervalo 100..110
-    const within = clamp(pct - 100, 0, 10); // 0..10
-    return (within / 10) * 100; // 0..100 do segmento ouro
-  }, [pct, hit100]);
 
   return (
     <div className="w-full rounded-2xl bg-white p-4 shadow-lg border border-gray-100">

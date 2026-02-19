@@ -2,16 +2,14 @@
 
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { LogOut, HelpCircle, MessageSquareText } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { twoNames } from "@/types/auth";
 
 import HelpModal from "./HelpModal";
 import FeedbackModal, { type FeedbackType } from "./FeedbackModal";
 
 export default function HeaderActions({ sellerName }: { sellerName?: string }) {
-  const name = useMemo(() => twoNames(sellerName), [sellerName]);
   const router = useRouter();
 
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -69,7 +67,7 @@ export default function HeaderActions({ sellerName }: { sellerName?: string }) {
     <>
       {/* Ações */}
       <div className="flex items-center gap-2">
-        <div className="text-white/50 font-extralight">Versão 2.2 </div>
+        <div className="text-white/50 font-extralight">Versão 2.3</div>
         <button
           type="button"
           onClick={() => setIsHelpOpen(true)}

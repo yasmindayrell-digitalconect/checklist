@@ -1,18 +1,10 @@
 "use client";
-
+import { formatBRL } from "@/components/utils";
 type Props = {
   devolucoes: number;              // R$
   taxaDev?: number | null;         // ex "2.1" ou "2,1" ou "2.1%" ou null
   devolutionCount?: number;       // opcional (pra recalcular taxa se vier ruim)
 };
-
-function formatBRL(v: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 2,
-  }).format(Number.isFinite(v) ? v : 0);
-}
 
 function StatRow({
   label,

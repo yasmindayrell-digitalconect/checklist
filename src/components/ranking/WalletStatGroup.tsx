@@ -1,7 +1,6 @@
 "use client";
 
 export default function WalletStatGroup({
-  label,
   pct,
   total,
   positiveMonth,
@@ -9,7 +8,6 @@ export default function WalletStatGroup({
   followUp,
   openBudgets,
 }: {
-  label: string; // ex: "CARTEIRA" / "POSITIVAÇÃO"
   pct: number; // 0-100
   total: number;
   positiveMonth: number;

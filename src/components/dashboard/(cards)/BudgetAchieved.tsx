@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-
+import { clamp } from "@/components/utils";
 type Props = {
   value: number;
   target: number;
@@ -10,10 +10,6 @@ type Props = {
   currency?: "BRL" | "NONE";
   decimals?: number;
 };
-
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
 
 function formatCompactBRL(v: number) {
   const abs = Math.abs(v);

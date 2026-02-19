@@ -4,27 +4,8 @@ import { getServerSession } from "@/lib/serverSession";
 import { radarPool } from "@/lib/Db";
 import type { Row, ContatoRow, OpenBudgetCard, SellerKpiRow } from "@/types/dashboard";
 import DashboardClient from "@/components/dashboard/DashboardClient";
+import { toNumber, pickClientName, isActiveFlag } from "@/app/utils";
 
-function toNumber(v: unknown): number {
-  if (v == null) return 0;
-  if (typeof v === "number") return v;
-  const n = Number(String(v).replace(",", "."));
-  return Number.isFinite(n) ? n : 0;
-}
-
-function pickClientName(r: Row) {
-  const nf = (r.nome_fantasia ?? "").trim();
-  if (nf) return nf;
-  const rs = (r.nome_razao_social ?? "").trim();
-  return rs || "Sem nome";
-}
-
-function isActiveFlag(v?: string | null) {
-  const s = (v ?? "").trim().toUpperCase();
-  if (!s) return true;
-  if (s === "N" || s === "0" || s === "F") return false;
-  return true;
-}
 
 export default async function Page() {
   noStore();
@@ -88,45 +69,57 @@ export default async function Page() {
       SELECT
         o.cadastro_id,
         MAX(o.orcamento_id)::bigint AS open_budget_id,
-        MIN(o.data_validade_orcamento) AS validade_orcamento_min
+        MIN(o.data_validade_orcamento) AS validade_orcamento_min,
+        COUNT(*)::int AS orcamentos_abertos,
+        SUM(o.valor_pedido - COALESCE(o.valor_outras_desp_manual, 0))::float as valor_total
       FROM public.orcamentos o
       WHERE
         ${openBudgetWhere}
+        AND o.data_cadastro >= date_trunc('month', CURRENT_DATE)
+        AND o.data_cadastro < date_trunc('month', CURRENT_DATE) + interval '1 month'
         AND COALESCE(o.pedido_fechado,'N') = 'N'
         AND COALESCE(o.cancelado,'N') = 'N'
         AND COALESCE(o.bloqueado,'N') = 'N'
-        AND o.data_validade_orcamento IS NOT NULL
       GROUP BY o.cadastro_id
     )
     SELECT
-      c.cadastro_id,
-      c.nome_razao_social,
-      c.nome_fantasia,
-      c.nome_cidade,
-      c.estado_id,
-      c.nome_vendedor,
-      c.vendedor_id,
-      c.limite_credito_aprovado,
-      c.cliente_ativo,
+      cad.cadastro_id,
+      cad.nome_razao_social,
+      cad.nome_fantasia,
+      cid.nome AS nome_cidade,
+      cid.estado_id,
+      f.nome AS nome_vendedor,
+      cl.funcionario_id AS vendedor_id,
+      clc.limite_credito_aprovado,
+      cl.cliente_ativo,
+      b.nome AS nome_bairro,
 
       ob.open_budget_id,
       ob.validade_orcamento_min,
+      ob.orcamentos_abertos,
+      ob.valor_total,
       ao_last.status AS orcamento_status,
+      ao_last.observacao AS orcamento_obs,
 
       COALESCE(ct.contatos_json, '[]'::jsonb) AS contatos_json
     FROM open_budgets ob
-    JOIN public.vw_web_clientes c ON c.cadastro_id = ob.cadastro_id
+    JOIN public.cadastros cad ON cad.cadastro_id = ob.cadastro_id
+    JOIN public.clientes cl ON cl.cadastro_id = cad.cadastro_id
+    LEFT JOIN public.funcionarios f ON f.funcionario_id = cl.funcionario_id
+    LEFT JOIN public.clientes_limite_credito clc ON clc.cliente_limite_credito_id = cl.cliente_limite_credito_id
+    LEFT JOIN public.bairros b ON b.bairro_id = cad.bairro_id
+    LEFT JOIN public.cidades cid ON cid.cidade_id = b.cidade_id
     LEFT JOIN contatos ct ON ct.cadastro_id = ob.cadastro_id
 
     LEFT JOIN LATERAL (
-      SELECT ao.status
+      SELECT ao.status, ao.observacao
       FROM public.acompanhamento_orcamentos ao
       WHERE ao.orcamento_id = ob.open_budget_id
       ORDER BY ao.data_hora_alteracao DESC NULLS LAST
       LIMIT 1
     ) ao_last ON TRUE
 
-    WHERE COALESCE(c.cliente_ativo,'S') <> 'N'
+    WHERE COALESCE(cl.cliente_ativo,'S') <> 'N'
     ORDER BY ob.validade_orcamento_min DESC NULLS LAST
     LIMIT 2000;
   `;

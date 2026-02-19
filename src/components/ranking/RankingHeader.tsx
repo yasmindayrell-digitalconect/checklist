@@ -1,20 +1,15 @@
+//components\ranking\RankingHeader.tsx
+
 "use client";
 
 import Link from "next/link";
 import React, { useState } from "react";
 import { formatBRL, formatPct } from "@/components/utils";
 import RankingBranchRow from "./RankingBranchRow";
+import type { BranchRow } from "@/types/ranking"; 
 
-
-
-export type BranchRow = {
-  empresa_id: number;
-  name: string;
-  goal: number;
-  realized: number;
-  pct: number;
-  realized_today: number; // <- novo
-};
+type SortKey = "week" | "monthGoal" | "positivity";
+type SortDir = "desc" | "asc";
 
 
 export default function RankingHeader({
@@ -25,6 +20,10 @@ export default function RankingHeader({
   totalMonthSold,
   totalMonthPct,
   byBranch,
+  sortKey,
+  sortDir,
+  onChangeSortKey,
+  onToggleSortDir,
 }: {
   weekOffset: number;
   weekLabel: string;
@@ -33,6 +32,10 @@ export default function RankingHeader({
   totalMonthSold: number;
   totalMonthPct: number;
   byBranch: BranchRow[];
+   sortKey: SortKey;
+  sortDir: SortDir;
+  onChangeSortKey: (k: SortKey) => void;
+  onToggleSortDir: () => void;
 }) {
   const [showBranches, setShowBranches] = useState(true);
 
@@ -121,31 +124,66 @@ export default function RankingHeader({
 
       {showBranches && <RankingBranchRow rows={byBranch} />}  
 
-      <div className="sticky top-0 z-30 mt-5 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-gray-100 backdrop-blur">
-        <div className="grid grid-cols-[280px_1fr_1fr_1fr] gap-6 items-baseline sticky">
+      <div className="sticky top-0 z-30 mt-5 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-gray-100 backdrop-blur border-y border-slate-200">
+        <div className="grid grid-cols-[280px_1fr_1fr_1fr_auto] gap-6 items-start">
           <div className="text-[10px] font-bold text-slate-600 uppercase tracking-wider px-10">
             Vendedor
           </div>
-        <div className="text-[10px] font-bold text-slate-600 uppercase tracking-wider px-10">
-          Semana
-          <div className="text-[11px] font-semibold text-slate-400 normal-case tracking-normal">
-            {weekLabel}
+
+          <div className="text-[10px] font-bold text-slate-600 uppercase tracking-wider px-10">
+            Semana
+            <div className="text-[11px] font-semibold text-slate-400 normal-case tracking-normal">
+              {weekLabel}
             </div>
           </div>
-        <div className="text-[10px] font-bold text-slate-600 uppercase tracking-wider px-12">
-          Meta Mensal
-          <div className="text-[11px] font-semibold text-slate-400 normal-case tracking-normal">
-            {monthLabel}
+
+          <div className="text-[10px] font-bold text-slate-600 uppercase tracking-wider px-12">
+            Meta Mensal
+            <div className="text-[11px] font-semibold text-slate-400 normal-case tracking-normal">
+              {monthLabel}
+            </div>
           </div>
-        </div>
+
           <div className="text-[10px] font-bold text-slate-600 uppercase tracking-wider px-8">
             Positivação
-          <div className="text-[11px] font-semibold text-slate-400 normal-case tracking-normal">
-            {monthLabel}
+            <div className="text-[11px] font-semibold text-slate-400 normal-case tracking-normal">
+              {monthLabel}
+            </div>
+          </div>
+
+          {/* CONTROLES DE ORDENAÇÃO */}
+          <div className="flex items-center justify-end gap-2 px-3">
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+              Ordenar
+            </span>
+
+            <select
+              value={sortKey}
+              onChange={(e) => onChangeSortKey(e.target.value as any)}
+              className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700"
+            >
+              <option value="week">Meta Semanal</option>
+              <option value="monthGoal">Meta mensal</option>
+              <option value="positivity">Positivação</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={onToggleSortDir}
+              disabled={sortKey === "week"} // opcional: semana sempre padrão
+              className={[
+                "h-8 rounded-lg border px-2 text-xs font-bold",
+                sortKey === "week"
+                  ? "border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
+              ].join(" ")}
+              title={sortKey === "week" ? "Ordenação padrão da semana" : "Alternar asc/desc"}
+            >
+              {sortDir === "desc" ? "↓" : "↑"}
+            </button>
           </div>
         </div>
       </div>
-    </div>
   </>
   );
 }
