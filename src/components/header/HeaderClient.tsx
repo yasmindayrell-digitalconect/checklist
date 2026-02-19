@@ -11,7 +11,6 @@ import HelpModal from "./HelpModal";
 import FeedbackModal, { type FeedbackType } from "./FeedbackModal";
 
 export default function HeaderActions({ sellerName }: { sellerName?: string }) {
-  const name = useMemo(() => twoNames(sellerName), [sellerName]);
   const router = useRouter();
 
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);

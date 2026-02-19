@@ -1,7 +1,5 @@
 "use client";
 
-import React, { useMemo } from "react";
-
 type Props = {
   monthly_meta: number;
   monthly_realized: number;

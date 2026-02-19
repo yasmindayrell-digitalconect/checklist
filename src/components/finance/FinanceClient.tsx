@@ -80,10 +80,6 @@ function sum(nums: number[]) {
   return acc;
 }
 
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
-
 function addMonths(ym: string, delta: number) {
   // ym: "YYYY-MM"
   const m = /^(\d{4})-(\d{2})$/.exec((ym ?? "").trim());
@@ -107,13 +103,6 @@ export default function FinanceClient({ data }: { data: FinanceBonusesPayload })
   const [selectedWeekKeys, setSelectedWeekKeys] = useState<Set<string>>(
     () => new Set(data.weeks.map((w) => w.mondayISO))
   );
-
-  const selectedWeeks = useMemo(() => {
-    const keys = selectedWeekKeys;
-    return data.weeks.filter((w) => keys.has(w.mondayISO));
-  }, [data.weeks, selectedWeekKeys]);
-
-  const selectedWeekCount = selectedWeeks.length;
 
   const computedRows = useMemo(() => {
     const keys = selectedWeekKeys;
