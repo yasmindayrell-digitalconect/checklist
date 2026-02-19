@@ -11,6 +11,7 @@ type RadarJoinedRow = {
   nome_fantasia: string | null;
   nome_cidade: string | null;
   estado_id: string | null;
+  nome_bairro: string | null; // ✅ ADICIONAR
   nome_vendedor: string | null;
   vendedor_id: string | number | null;
   limite_credito_aprovado: number | null;
@@ -22,14 +23,13 @@ type RadarJoinedRow = {
 
   can_undo: boolean | null;
   ultima_compra: Date | null;
-  last_sale_orcamento_id :number | null;
+  last_sale_orcamento_id: number | null;
 
   orcamentos_abertos: number;
   validade_orcamento_min: Date | null;
   tem_orcamento_aberto: boolean | "t" | "f" | 1 | 0;
-  open_budget_id:number;
 
-
+  open_budget_id: string | number | null; // ✅ pode ser null e pode vir bigint/string
   contatos_json: Array<{
     id_contato: number;
     id_cliente: number;
@@ -38,11 +38,9 @@ type RadarJoinedRow = {
     telefone: string | null;
     celular: string | null;
     criado_em: string | Date | null;
-
-
-
   }>;
 };
+
 
 function isActiveFlag(v?: string | null) {
   const s = (v ?? "").trim().toUpperCase();
@@ -76,10 +74,10 @@ export default async function Page() {
   // seller: filtra carteira
   if (session.role === "seller") {
     if (session.sellerId === -1) {
-      where += ` AND c.vendedor_id IS NULL`;
+      where += ` AND c.funcionario_id IS NULL`;
     } else {
       params.push(session.sellerId);
-      where += ` AND (c.vendedor_id)::int = $${params.length}::int`;
+      where += ` AND (c.funcionario_id)::int = $${params.length}::int`;
     }
   }
 
@@ -91,16 +89,16 @@ export default async function Page() {
     params.push(ADMIN_SELLER_IDS);
 
     where += `
-      AND c.vendedor_id IS NOT NULL
-      AND (c.vendedor_id)::int = ANY($${params.length}::int[])
-      AND COALESCE(TRIM(c.nome_vendedor), '') <> ''
-      AND UPPER(TRIM(c.nome_vendedor)) NOT LIKE 'GRUPO%'
-      AND UPPER(TRIM(c.nome_vendedor)) NOT LIKE 'VENDEDOR%'
-    `;
-  }
+      AND c.funcionario_id IS NOT NULL
+      AND (c.funcionario_id)::int = ANY($${params.length}::int[])
+      AND COALESCE(TRIM(f.nome), '') <> ''
+      AND UPPER(TRIM(f.nome)) NOT LIKE 'GRUPO%'
+      AND UPPER(TRIM(f.nome)) NOT LIKE 'VENDEDOR%'
+      `;
+    }
 
 
-  const sql =  `
+  const sql = `
     WITH last_sale AS (
       SELECT DISTINCT ON (o.cadastro_id)
         o.cadastro_id AS cliente_id,
@@ -166,14 +164,18 @@ export default async function Page() {
       GROUP BY o.cadastro_id
     )
     SELECT
-      c.cadastro_id,
-      c.nome_razao_social,
-      c.nome_fantasia,
-      c.nome_cidade,
-      c.estado_id,
-      c.nome_vendedor,
-      c.vendedor_id,
-      c.limite_credito_aprovado,
+      cad.cadastro_id,
+      cad.nome_razao_social,
+      cad.nome_fantasia,
+
+      b.nome AS nome_bairro,
+      cid.nome AS nome_cidade,
+      cid.estado_id,
+
+      f.nome AS nome_vendedor,
+      c.funcionario_id AS vendedor_id,
+
+      clc.limite_credito_aprovado,
       c.cliente_ativo,
 
       i.ultima_interacao,
@@ -194,15 +196,20 @@ export default async function Page() {
       ob.open_budget_id,
 
       COALESCE(ct.contatos_json, '[]'::jsonb) AS contatos_json
-    FROM public.vw_web_clientes c
+    FROM public.cadastros cad
+    JOIN public.clientes c ON c.cadastro_id = cad.cadastro_id
+    LEFT JOIN public.funcionarios f ON f.funcionario_id = c.funcionario_id
+    LEFT JOIN public.clientes_limite_credito clc ON clc.cliente_limite_credito_id = c.cliente_limite_credito_id
+    LEFT JOIN public.bairros b ON b.bairro_id = cad.bairro_id
+    LEFT JOIN public.cidades cid ON cid.cidade_id = b.cidade_id
     LEFT JOIN public.crm_interacoes_radar i
-      ON i.cliente_id = c.cadastro_id
+      ON i.cliente_id = cad.cadastro_id
     LEFT JOIN last_sale ls
-      ON ls.cliente_id = c.cadastro_id
+      ON ls.cliente_id = cad.cadastro_id
     LEFT JOIN contatos ct
-      ON ct.cadastro_id = c.cadastro_id
+      ON ct.cadastro_id = cad.cadastro_id
     LEFT JOIN open_budgets ob
-      ON ob.cadastro_id = c.cadastro_id
+      ON ob.cadastro_id = cad.cadastro_id
     WHERE ${where}
     ORDER BY
       (ls.ultima_compra IS NULL) ASC,
@@ -226,14 +233,14 @@ export default async function Page() {
         r.last_sale_orcamento_id == null ? null : Number(r.last_sale_orcamento_id);
 
 
-    const contatos: ContatoRow[] = (r.contatos_json ?? []).map((c) => ({
-      id_contato: c.id_contato,
-      id_cliente: clientId, // ✅ usa number (não r.cadastro_id)
-      nome_contato: (c.nome_contato ?? "").trim(),
-      funcao: c.funcao ?? null,
-      telefone: (c.celular ?? c.telefone) ?? null,
-      criado_em: c.criado_em ? new Date(c.criado_em).toISOString() : null,
-    }));
+      const contatos: ContatoRow[] = (r.contatos_json ?? []).map((ct) => ({
+        id_contato: ct.id_contato,
+        id_cliente: clientId,
+        nome_contato: (ct.nome_contato ?? "").trim(),
+        funcao: ct.funcao ?? null,
+        telefone: (ct.celular ?? ct.telefone) ?? null,
+        criado_em: ct.criado_em ? new Date(ct.criado_em).toISOString() : null,
+      }));
       const principal = contatos.find((c) => c.telefone)?.telefone ?? null;
 
   const row: ClienteRow = {

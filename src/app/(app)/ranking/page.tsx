@@ -441,20 +441,21 @@ WITH
     LEFT JOIN devolucoes_semana d ON d.seller_id = b.seller_id
   ),
 
-  /* =========================
+/* =========================
      CARTEIRA / POSITIVAÇÃO (MÊS da semana_ini)
      ========================= */
   carteira_base AS (
     SELECT
-      c.vendedor_id::int AS seller_id,
+      c.funcionario_id::int AS seller_id,
       c.cadastro_id::bigint AS cliente_id
-    FROM public.vw_web_clientes c
+    FROM public.clientes c
+    JOIN public.funcionarios f ON f.funcionario_id = c.funcionario_id
     WHERE COALESCE(c.cliente_ativo,'S') <> 'N'
-      AND c.vendedor_id IS NOT NULL
-      AND (c.vendedor_id)::int = ANY($1::int[])
-      AND COALESCE(TRIM(c.nome_vendedor), '') <> ''
-      AND UPPER(TRIM(c.nome_vendedor)) NOT LIKE 'GRUPO%'
-      AND UPPER(TRIM(c.nome_vendedor)) NOT LIKE 'VENDEDOR%'
+      AND c.funcionario_id IS NOT NULL
+      AND (c.funcionario_id)::int = ANY($1::int[])
+      AND COALESCE(TRIM(f.nome), '') <> ''
+      AND UPPER(TRIM(f.nome)) NOT LIKE 'GRUPO%'
+      AND UPPER(TRIM(f.nome)) NOT LIKE 'VENDEDOR%'
   ),
 
   -- ✅ positivado no mês, mas só até o dt_fim_ref (fim do mês ou hoje)

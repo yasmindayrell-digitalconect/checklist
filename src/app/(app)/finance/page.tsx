@@ -70,12 +70,6 @@ export default async function FinancePage({
   const monthLabel = fmtMonthBR(dtIni);
   const anoMes = y * 100 + m;
 
-  /**
-   * Query A: mensal (meta + líquido + %) + carteira/positivação do mês
-   * - líquido: mesma fórmula do ranking (orcamentos - dev_itens - ajustes - despesas - fretes)
-   * - metas: itens_metas (ano_mes)
-   * - positivação: vw_web_clientes + orcamentos fechados no mês
-   */
   const sqlMonthlyWallet = `
 WITH
   params AS (
@@ -158,17 +152,19 @@ WITH
     LEFT JOIN metas_mes m ON m.seller_id = s.seller_id
   ),
 
+
   carteira_base AS (
     SELECT
-      c.vendedor_id::int AS seller_id,
-      c.cadastro_id::bigint AS cliente_id
-    FROM public.vw_web_clientes c
-    WHERE COALESCE(c.cliente_ativo,'S') <> 'N'
-      AND c.vendedor_id IS NOT NULL
-      AND (c.vendedor_id)::int = ANY($1::int[])
-      AND COALESCE(TRIM(c.nome_vendedor), '') <> ''
-      AND UPPER(TRIM(c.nome_vendedor)) NOT LIKE 'GRUPO%'
-      AND UPPER(TRIM(c.nome_vendedor)) NOT LIKE 'VENDEDOR%'
+      cl.funcionario_id::int AS seller_id,
+      cl.cadastro_id::bigint AS cliente_id
+    FROM public.clientes cl
+    JOIN public.funcionarios f ON f.funcionario_id = cl.funcionario_id
+    WHERE COALESCE(cl.cliente_ativo,'S') <> 'N'
+      AND cl.funcionario_id IS NOT NULL
+      AND (cl.funcionario_id)::int = ANY($1::int[])
+      AND COALESCE(TRIM(f.nome), '') <> ''
+      AND UPPER(TRIM(f.nome)) NOT LIKE 'GRUPO%'
+      AND UPPER(TRIM(f.nome)) NOT LIKE 'VENDEDOR%'
   ),
 
   last_sale_month AS (

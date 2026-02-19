@@ -71,7 +71,6 @@ export default async function GoalsPage({ searchParams }: { searchParams?: Promi
   const yearMonth =
     refMonday.getFullYear() * 100 + (refMonday.getMonth() + 1);
 
-  // semanas (últimas 3) relativas ao weekOffset: [ref, ref-1, ref-2]
   const weekRefs = [0, -4, -8, -12].map((delta) => {
     const d = new Date(refMonday);
     d.setDate(d.getDate() + delta * 7);
@@ -340,8 +339,8 @@ WITH
     CROSS JOIN weeks w
     LEFT JOIN public.metas_semanal ms
       ON ms.vendedor_id::int = s.seller_id
-    AND ms.data_inicio = w.week_ini
-    AND ms.data_fim    = w.week_fim
+    AND ms.data_inicio::date <= w.week_ini
+    AND ms.data_fim::date    >= w.week_fim
     GROUP BY 1,2,3,4
   ),
 
@@ -368,8 +367,8 @@ WITH
     CROSS JOIN month_weeks mw
     LEFT JOIN public.metas_semanal ms
       ON ms.vendedor_id::int = s.seller_id
-    AND ms.data_inicio = mw.week_ini
-    AND ms.data_fim    = mw.week_fim
+    AND ms.data_inicio::date <= mw.week_ini
+    AND ms.data_fim::date    >= mw.week_fim
     GROUP BY 1
   )
 
