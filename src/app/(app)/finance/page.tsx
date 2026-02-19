@@ -10,27 +10,12 @@ import FinanceClient, {
   type FinanceWeek,
   type FinanceSellerWeek,
 } from "@/components/finance/FinanceClient";
+import { toNumber, fmtMonthBR, fmtBRShort, first} from "@/app/utils"; 
 
 type SP = Record<string, string | string[] | undefined> | undefined;
 
-function first(v: string | string[] | undefined) {
-  return Array.isArray(v) ? v[0] : v;
-}
 
-function toNumber(v: unknown): number {
-  if (v == null) return 0;
-  if (typeof v === "number") return v;
-  const n = Number(String(v).replace(",", "."));
-  return Number.isFinite(n) ? n : 0;
-}
-
-function fmtMonthBR(date: Date) {
-  return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(date);
-}
-
-function fmtBRShort(date: Date) {
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(date);
-}
+ 
 
 function parseMonthParam(monthParam?: string | null) {
   // esperado: "YYYY-MM"
@@ -71,156 +56,156 @@ export default async function FinancePage({
   const anoMes = y * 100 + m;
 
   const sqlMonthlyWallet = `
-WITH
-  params AS (
+    WITH
+      params AS (
+        SELECT
+          $2::date AS dt_ini,
+          $3::date AS dt_fim,
+          (EXTRACT(YEAR FROM $2::date)::int * 100 + EXTRACT(MONTH FROM $2::date)::int) AS ano_mes
+      ),
+      sellers AS (
+        SELECT f.funcionario_id::int AS seller_id, f.nome AS seller_name
+        FROM public.funcionarios f
+        WHERE upper(coalesce(f.ativo,'S')) NOT IN ('N','NAO','0','F','FALSE')
+          AND f.funcionario_id IS NOT NULL
+          AND f.funcionario_id::int = ANY($1::int[])
+      ),
+
+      vendas_mes AS (
+        SELECT
+          o.vendedor_id::int AS seller_id,
+          SUM(COALESCE(o.valor_pedido, 0))::numeric AS valor_bruto_total,
+          SUM(CASE WHEN COALESCE(o.totalmente_devolvido,'N') = 'N'
+                  THEN COALESCE(o.valor_outras_desp_manual, 0) ELSE 0 END)::numeric AS despesa_operacional,
+          SUM(CASE WHEN COALESCE(o.totalmente_devolvido,'N') = 'S'
+                  THEN COALESCE(o.valor_outras_desp_manual, 0) ELSE 0 END)::numeric AS ajuste_desp_estorno,
+          SUM(COALESCE(o.valor_frete_processado, 0) + COALESCE(o.valor_frete_extra_manual, 0))::numeric AS total_frete
+        FROM public.orcamentos o
+        CROSS JOIN params p
+        WHERE o.data_recebimento >= p.dt_ini
+          AND o.data_recebimento < (p.dt_fim + 1)
+          AND COALESCE(o.cancelado,'N') = 'N'
+          AND o.vendedor_id IS NOT NULL
+        GROUP BY 1
+      ),
+
+      dev_itens_mes AS (
+        SELECT
+          rd.vendedor_id::int AS seller_id,
+          SUM(COALESCE(ird.quantidade * ird.preco_venda, 0))::numeric AS total_dev_valor
+        FROM public.itens_requisicoes_devolucoes ird
+        JOIN public.requisicoes_devolucoes rd ON ird.requisicao_id = rd.requisicao_id
+        CROSS JOIN params p
+        WHERE ird.data_hora_alteracao >= p.dt_ini
+          AND ird.data_hora_alteracao < (p.dt_fim + 1)
+          AND rd.vendedor_id IS NOT NULL
+        GROUP BY 1
+      ),
+
+      metas_mes AS (
+        SELECT
+          im.funcionario_id::int AS seller_id,
+          SUM(COALESCE(im.meta, 0))::numeric AS goal_meta
+        FROM public.itens_metas im
+        CROSS JOIN params p
+        WHERE im.ano_mes = p.ano_mes
+        GROUP BY 1
+      ),
+
+      mensal AS (
+        SELECT
+          s.seller_id,
+          s.seller_name,
+          COALESCE(m.goal_meta, 0)::numeric AS goal_meta,
+          (
+            (COALESCE(v.valor_bruto_total, 0) - COALESCE(d.total_dev_valor, 0) - COALESCE(v.ajuste_desp_estorno, 0))
+            - COALESCE(v.despesa_operacional, 0)
+            - COALESCE(v.total_frete, 0)
+          )::numeric AS net_sales,
+          CASE
+            WHEN COALESCE(m.goal_meta, 0) > 0
+            THEN ROUND(((
+              (COALESCE(v.valor_bruto_total, 0) - COALESCE(d.total_dev_valor, 0) - COALESCE(v.ajuste_desp_estorno, 0))
+              - COALESCE(v.despesa_operacional, 0)
+              - COALESCE(v.total_frete, 0)
+            ) / m.goal_meta * 100)::numeric, 2)
+            ELSE 0
+          END AS pct_achieved
+        FROM sellers s
+        LEFT JOIN vendas_mes v ON v.seller_id = s.seller_id
+        LEFT JOIN dev_itens_mes d ON d.seller_id = s.seller_id
+        LEFT JOIN metas_mes m ON m.seller_id = s.seller_id
+      ),
+
+
+      carteira_base AS (
+        SELECT
+          cl.funcionario_id::int AS seller_id,
+          cl.cadastro_id::bigint AS cliente_id
+        FROM public.clientes cl
+        JOIN public.funcionarios f ON f.funcionario_id = cl.funcionario_id
+        WHERE COALESCE(cl.cliente_ativo,'S') <> 'N'
+          AND cl.funcionario_id IS NOT NULL
+          AND (cl.funcionario_id)::int = ANY($1::int[])
+          AND COALESCE(TRIM(f.nome), '') <> ''
+          AND UPPER(TRIM(f.nome)) NOT LIKE 'GRUPO%'
+          AND UPPER(TRIM(f.nome)) NOT LIKE 'VENDEDOR%'
+      ),
+
+      last_sale_month AS (
+        SELECT
+          o.vendedor_id::int AS seller_id,
+          o.cadastro_id::bigint AS cliente_id
+        FROM public.orcamentos o
+        CROSS JOIN params p
+        WHERE o.pedido_fechado = 'S'
+          AND COALESCE(o.cancelado,'N') = 'N'
+          AND COALESCE(o.bloqueado,'N') = 'N'
+          AND o.data_recebimento::date >= p.dt_ini
+          AND o.data_recebimento::date <= p.dt_fim
+          AND o.vendedor_id IS NOT NULL
+          AND o.cadastro_id IS NOT NULL
+        GROUP BY 1,2
+      ),
+
+      carteira_stats AS (
+        SELECT
+          b.seller_id,
+          COUNT(DISTINCT b.cliente_id)::int AS wallet_total,
+          COUNT(DISTINCT ls.cliente_id)::int AS wallet_positive_month,
+          CASE
+            WHEN COUNT(DISTINCT b.cliente_id) > 0
+            THEN ROUND((COUNT(DISTINCT ls.cliente_id)::numeric / COUNT(DISTINCT b.cliente_id)::numeric) * 100, 2)
+            ELSE 0
+          END AS wallet_positive_pct
+        FROM carteira_base b
+        LEFT JOIN last_sale_month ls ON ls.seller_id = b.seller_id AND ls.cliente_id = b.cliente_id
+        GROUP BY 1
+      )
+
     SELECT
-      $2::date AS dt_ini,
-      $3::date AS dt_fim,
-      (EXTRACT(YEAR FROM $2::date)::int * 100 + EXTRACT(MONTH FROM $2::date)::int) AS ano_mes
-  ),
-  sellers AS (
-    SELECT f.funcionario_id::int AS seller_id, f.nome AS seller_name
-    FROM public.funcionarios f
-    WHERE upper(coalesce(f.ativo,'S')) NOT IN ('N','NAO','0','F','FALSE')
-      AND f.funcionario_id IS NOT NULL
-      AND f.funcionario_id::int = ANY($1::int[])
-  ),
+      me.seller_id,
+      me.seller_name,
+      me.goal_meta,
+      me.net_sales,
+      me.pct_achieved,
+      COALESCE(cs.wallet_total, 0)::int AS wallet_total,
+      COALESCE(cs.wallet_positive_month, 0)::int AS wallet_positive_month,
+      COALESCE(cs.wallet_positive_pct, 0)::numeric AS wallet_positive_pct
+    FROM mensal me
+    LEFT JOIN carteira_stats cs ON cs.seller_id = me.seller_id
+    ORDER BY me.seller_name;
+    `;
 
-  vendas_mes AS (
-    SELECT
-      o.vendedor_id::int AS seller_id,
-      SUM(COALESCE(o.valor_pedido, 0))::numeric AS valor_bruto_total,
-      SUM(CASE WHEN COALESCE(o.totalmente_devolvido,'N') = 'N'
-               THEN COALESCE(o.valor_outras_desp_manual, 0) ELSE 0 END)::numeric AS despesa_operacional,
-      SUM(CASE WHEN COALESCE(o.totalmente_devolvido,'N') = 'S'
-               THEN COALESCE(o.valor_outras_desp_manual, 0) ELSE 0 END)::numeric AS ajuste_desp_estorno,
-      SUM(COALESCE(o.valor_frete_processado, 0) + COALESCE(o.valor_frete_extra_manual, 0))::numeric AS total_frete
-    FROM public.orcamentos o
-    CROSS JOIN params p
-    WHERE o.data_recebimento >= p.dt_ini
-      AND o.data_recebimento < (p.dt_fim + 1)
-      AND COALESCE(o.cancelado,'N') = 'N'
-      AND o.vendedor_id IS NOT NULL
-    GROUP BY 1
-  ),
-
-  dev_itens_mes AS (
-    SELECT
-      rd.vendedor_id::int AS seller_id,
-      SUM(COALESCE(ird.quantidade * ird.preco_venda, 0))::numeric AS total_dev_valor
-    FROM public.itens_requisicoes_devolucoes ird
-    JOIN public.requisicoes_devolucoes rd ON ird.requisicao_id = rd.requisicao_id
-    CROSS JOIN params p
-    WHERE ird.data_hora_alteracao >= p.dt_ini
-      AND ird.data_hora_alteracao < (p.dt_fim + 1)
-      AND rd.vendedor_id IS NOT NULL
-    GROUP BY 1
-  ),
-
-  metas_mes AS (
-    SELECT
-      im.funcionario_id::int AS seller_id,
-      SUM(COALESCE(im.meta, 0))::numeric AS goal_meta
-    FROM public.itens_metas im
-    CROSS JOIN params p
-    WHERE im.ano_mes = p.ano_mes
-    GROUP BY 1
-  ),
-
-  mensal AS (
-    SELECT
-      s.seller_id,
-      s.seller_name,
-      COALESCE(m.goal_meta, 0)::numeric AS goal_meta,
-      (
-        (COALESCE(v.valor_bruto_total, 0) - COALESCE(d.total_dev_valor, 0) - COALESCE(v.ajuste_desp_estorno, 0))
-        - COALESCE(v.despesa_operacional, 0)
-        - COALESCE(v.total_frete, 0)
-      )::numeric AS net_sales,
-      CASE
-        WHEN COALESCE(m.goal_meta, 0) > 0
-        THEN ROUND(((
-          (COALESCE(v.valor_bruto_total, 0) - COALESCE(d.total_dev_valor, 0) - COALESCE(v.ajuste_desp_estorno, 0))
-          - COALESCE(v.despesa_operacional, 0)
-          - COALESCE(v.total_frete, 0)
-        ) / m.goal_meta * 100)::numeric, 2)
-        ELSE 0
-      END AS pct_achieved
-    FROM sellers s
-    LEFT JOIN vendas_mes v ON v.seller_id = s.seller_id
-    LEFT JOIN dev_itens_mes d ON d.seller_id = s.seller_id
-    LEFT JOIN metas_mes m ON m.seller_id = s.seller_id
-  ),
-
-
-  carteira_base AS (
-    SELECT
-      cl.funcionario_id::int AS seller_id,
-      cl.cadastro_id::bigint AS cliente_id
-    FROM public.clientes cl
-    JOIN public.funcionarios f ON f.funcionario_id = cl.funcionario_id
-    WHERE COALESCE(cl.cliente_ativo,'S') <> 'N'
-      AND cl.funcionario_id IS NOT NULL
-      AND (cl.funcionario_id)::int = ANY($1::int[])
-      AND COALESCE(TRIM(f.nome), '') <> ''
-      AND UPPER(TRIM(f.nome)) NOT LIKE 'GRUPO%'
-      AND UPPER(TRIM(f.nome)) NOT LIKE 'VENDEDOR%'
-  ),
-
-  last_sale_month AS (
-    SELECT
-      o.vendedor_id::int AS seller_id,
-      o.cadastro_id::bigint AS cliente_id
-    FROM public.orcamentos o
-    CROSS JOIN params p
-    WHERE o.pedido_fechado = 'S'
-      AND COALESCE(o.cancelado,'N') = 'N'
-      AND COALESCE(o.bloqueado,'N') = 'N'
-      AND o.data_recebimento::date >= p.dt_ini
-      AND o.data_recebimento::date <= p.dt_fim
-      AND o.vendedor_id IS NOT NULL
-      AND o.cadastro_id IS NOT NULL
-    GROUP BY 1,2
-  ),
-
-  carteira_stats AS (
-    SELECT
-      b.seller_id,
-      COUNT(DISTINCT b.cliente_id)::int AS wallet_total,
-      COUNT(DISTINCT ls.cliente_id)::int AS wallet_positive_month,
-      CASE
-        WHEN COUNT(DISTINCT b.cliente_id) > 0
-        THEN ROUND((COUNT(DISTINCT ls.cliente_id)::numeric / COUNT(DISTINCT b.cliente_id)::numeric) * 100, 2)
-        ELSE 0
-      END AS wallet_positive_pct
-    FROM carteira_base b
-    LEFT JOIN last_sale_month ls ON ls.seller_id = b.seller_id AND ls.cliente_id = b.cliente_id
-    GROUP BY 1
-  )
-
-SELECT
-  me.seller_id,
-  me.seller_name,
-  me.goal_meta,
-  me.net_sales,
-  me.pct_achieved,
-  COALESCE(cs.wallet_total, 0)::int AS wallet_total,
-  COALESCE(cs.wallet_positive_month, 0)::int AS wallet_positive_month,
-  COALESCE(cs.wallet_positive_pct, 0)::numeric AS wallet_positive_pct
-FROM mensal me
-LEFT JOIN carteira_stats cs ON cs.seller_id = me.seller_id
-ORDER BY me.seller_name;
-`;
-
-  /**
-   * Query B: semanal por vendedor para TODAS as semanas (Seg–Sex) que intersectam o mês
-   * - gera mondays
-   * - week = monday..monday+4
-   * - inclui semana se (monday <= dt_fim) e (friday >= dt_ini)
-   * - calcula weekly_meta (metas_semanal que cobre a semana inteira)
-   * - calcula weekly_realized (orcamentos - creditos devolução - ajuste - despesas - fretes)
-   */
-  const sqlWeeks = `
+      /**
+       * Query B: semanal por vendedor para TODAS as semanas (Seg–Sex) que intersectam o mês
+       * - gera mondays
+       * - week = monday..monday+4
+       * - inclui semana se (monday <= dt_fim) e (friday >= dt_ini)
+       * - calcula weekly_meta (metas_semanal que cobre a semana inteira)
+       * - calcula weekly_realized (orcamentos - creditos devolução - ajuste - despesas - fretes)
+       */
+      const sqlWeeks = `
 WITH
   params AS (SELECT $2::date AS dt_ini, $3::date AS dt_fim),
 

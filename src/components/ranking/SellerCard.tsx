@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import type { RankingSellerRow } from "@/app/(app)/ranking/page";
+import type { RankingSellerRow } from "@/types/ranking";
 import  StatGroup  from "./StatGroup"
 import WalletStatGroup from "./WalletStatGroup";
 function Badge({

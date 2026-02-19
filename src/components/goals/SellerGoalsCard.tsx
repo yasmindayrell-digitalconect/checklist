@@ -1,17 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import type { SellerGoalsRow } from "./GoalsEditorClient";
+import type { SellerGoalsRow } from "@/types/goals";
 import WeekMetaRow from "./WeekGoalRow";
 import WeekMetaEditor from "./WeekGoalEditor";
-
-function formatBRL(v: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 2,
-  }).format(Number.isFinite(v) ? v : 0);
-}
+import { formatBRL} from "@/components/utils";
 
 export default function SellerGoalsCard({ row }: { row: SellerGoalsRow }) {
   const [currentWeekMeta, setCurrentWeekMeta] = useState<number>(row.current_week_meta ?? 0);

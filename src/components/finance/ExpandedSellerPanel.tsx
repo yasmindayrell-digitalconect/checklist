@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useMemo } from "react";
-import type { FinanceSeller, FinanceWeek } from "./FinanceClient";
-import { formatBRL, formatPct } from "./utils";
+import { formatBRL, formatPct } from "@/components/utils";
+import { FinanceSeller, FinanceWeek } from "@/types/finance";
 
 function findWeekLabel(allWeeks: FinanceWeek[], mondayISO: string) {
   return allWeeks.find((w) => w.mondayISO === mondayISO)?.label ?? mondayISO;

@@ -8,7 +8,7 @@ import { getCardStatus, type BoardColumn } from "@/lib/checklistRules";
 import { SquareCheckBig, AlarmClockOff, NotebookPen } from "lucide-react";
 import NotesModal from "./NotesModal";
 import PhonePickerModal from "./PhonePickerModal";
-
+import {buildMessage} from "@/components/utils"
 type Props = {
   client: ClienteComContatos;
   column: BoardColumn;
@@ -17,10 +17,6 @@ type Props = {
   onUndoContacted: () => void;
   onOpenCalendar?: () => void;
 };
-
-function buildMessage() {
-  return `Oi! Passando pra ver como você está e se posso te ajudar com um novo pedido`;
-}
 
 function statusUI(status: "danger" | "warning" | "ok") {
   switch (status) {

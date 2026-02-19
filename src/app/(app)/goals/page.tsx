@@ -8,39 +8,7 @@ import GoalsDashboardClient, {
   type SellerGoalsRow,
   type WeekMetaItem,
 } from "@/components/goals/GoalsEditorClient";
-
-function clampInt(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
-
-// Semana (Seg–Sex) igual ao ranking (date_trunc('week') = segunda no Postgres)
-function getWeekRangeFromRef(ref: Date) {
-  const d = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate());
-  const jsDay = d.getDay(); // 0 dom ... 6 sáb
-  const diffToMonday = (jsDay + 6) % 7; // seg=0 ... dom=6
-  const monday = new Date(d);
-  monday.setDate(d.getDate() - diffToMonday);
-
-  const friday = new Date(monday);
-  friday.setDate(monday.getDate() + 4);
-
-  return { monday, friday };
-}
-
-function fmtBRShort(date: Date) {
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(date);
-}
-
-function fmtMonthBR(date: Date) {
-  return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(date);
-}
-
-function toNumber(v: unknown): number {
-  if (v == null) return 0;
-  if (typeof v === "number") return v;
-  const n = Number(String(v).replace(",", "."));
-  return Number.isFinite(n) ? n : 0;
-}
+import { toNumber, fmtMonthBR, clampInt, fmtBRShort, getWeekRangeFromRef } from "@/app/utils"; 
 
 type SP = { weekOffset?: string };
 

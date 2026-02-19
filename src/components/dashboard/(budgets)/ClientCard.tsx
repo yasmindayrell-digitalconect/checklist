@@ -5,17 +5,13 @@ import type { OpenBudgetCard } from "@/types/dashboard";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import PhonePickerModal from "@/components/dashboard/PhonePickerModal";
 import type { PhoneOption } from "@/types/dashboard";
-import {buildMessage, uniquePhonesFromClient,getAccentColor } from "../utils"
+import {buildMessage, uniquePhonesFromClient } from "@/components/utils";
 type Props = { client: OpenBudgetCard };
 
 
 
 export default function DashboardClientCard({ client }: Props) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
-
-
-
-  const accentColor = useMemo(() => getAccentColor(), [client.orcamento_status]);
 
   // contatos / whatsapp
   const phoneChoices = useMemo(() => uniquePhonesFromClient(client), [client]);
@@ -54,13 +50,13 @@ export default function DashboardClientCard({ client }: Props) {
         "p-3 shadow-sm hover:shadow-md transition",
         "h-full flex flex-col",
       ].join(" ")}
-      style={{ borderLeftColor: accentColor }}
+      style={{ borderLeftColor: "#80ef80" }}
     >
       {/* Header */}
       <div className="flex items-start gap-2">
         <span
           className="mt-1.5 h-2.5 w-2.5 rounded-full"
-          style={{ backgroundColor: accentColor }}
+          style={{ backgroundColor: "#80ef80" }}
         />
 
         <div className="min-w-0 flex-1">
@@ -96,7 +92,7 @@ export default function DashboardClientCard({ client }: Props) {
               ? "text-white"
               : "bg-gray-100 text-gray-400 ring-gray-200 cursor-not-allowed",
           ].join(" ")}
-          style={hasPhone ? { backgroundColor: accentColor } : undefined}
+          style={hasPhone ? { backgroundColor: "#80ef80" } : undefined}
         >
           Mensagem
         </button>

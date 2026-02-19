@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import type { FinanceSeller, FinanceWeek } from "./FinanceClient";
+import { FinanceSeller, FinanceWeek} from "@/types/finance";
 import ExpandedSellerPanel from "./ExpandedSellerPanel";
-import { formatBRL, formatPct, FINANCE_GRID } from "./utils";
+import { formatBRL, formatPct, FINANCE_GRID } from "@/components/utils";
 
 export default function SellerRow({
   row,

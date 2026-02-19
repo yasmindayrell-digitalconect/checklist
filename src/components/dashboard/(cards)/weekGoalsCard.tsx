@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { formatBRL , clamp, formatPct} from "@/components/utils";
 
 type Props = {
   weekly_meta: number;
@@ -10,22 +11,6 @@ type Props = {
   weekly_bonus: number; // (pode ignorar, vou calcular aqui)
 };
 
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
-
-function formatBRL(v: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 2,
-  }).format(Number.isFinite(v) ? v : 0);
-}
-
-function formatPct(v: number, decimals = 1) {
-  const n = Number.isFinite(v) ? v : 0;
-  return `${n.toFixed(decimals)}%`;
-}
 
 function StatRow({
   label,

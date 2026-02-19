@@ -6,18 +6,10 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { formatBRL, formatPct } from "@/components/utils";
 import RankingBranchRow from "./RankingBranchRow";
+import type { BranchRow } from "@/types/ranking"; 
 
 type SortKey = "week" | "monthGoal" | "positivity";
 type SortDir = "desc" | "asc";
-
-export type BranchRow = {
-  empresa_id: number;
-  name: string;
-  goal: number;
-  realized: number;
-  pct: number;
-  realized_today: number; // <- novo
-};
 
 
 export default function RankingHeader({

@@ -1,62 +1,12 @@
 import { unstable_noStore as noStore } from "next/cache";
 import HomeClient from "@/components/home/HomeClient";
-import type { ClienteComContatos, ClienteRow, ContatoRow } from "@/types/crm";
+import type { ClienteComContatos, ClienteRow, ContatoRow, RadarJoinedRow } from "@/types/crm";
 import { getServerSession } from "@/lib/serverSession";
 import { redirect } from "next/navigation";
 import { radarPool } from "@/lib/Db";
-
-type RadarJoinedRow = {
-  cadastro_id: string | number;
-  nome_razao_social: string | null;
-  nome_fantasia: string | null;
-  nome_cidade: string | null;
-  estado_id: string | null;
-  nome_bairro: string | null; // ✅ ADICIONAR
-  nome_vendedor: string | null;
-  vendedor_id: string | number | null;
-  limite_credito_aprovado: number | null;
-  cliente_ativo: string | null;
-
-  ultima_interacao: Date | null;
-  proxima_interacao: Date | null;
-  observacoes: string | null;
-
-  can_undo: boolean | null;
-  ultima_compra: Date | null;
-  last_sale_orcamento_id: number | null;
-
-  orcamentos_abertos: number;
-  validade_orcamento_min: Date | null;
-  tem_orcamento_aberto: boolean | "t" | "f" | 1 | 0;
-
-  open_budget_id: string | number | null; // ✅ pode ser null e pode vir bigint/string
-  contatos_json: Array<{
-    id_contato: number;
-    id_cliente: number;
-    nome_contato: string | null;
-    funcao: string | null;
-    telefone: string | null;
-    celular: string | null;
-    criado_em: string | Date | null;
-  }>;
-};
+import { isActiveFlag, pickClientName} from "@/app/utils"; 
 
 
-function isActiveFlag(v?: string | null) {
-  const s = (v ?? "").trim().toUpperCase();
-  if (!s) return true;
-  if (s === "N") return false;
-  if (s === "0") return false;
-  if (s === "F") return false;
-  return true;
-}
-
-function pickClientName(r: RadarJoinedRow) {
-  const nf = (r.nome_fantasia ?? "").trim();
-  if (nf) return nf;
-  const rs = (r.nome_razao_social ?? "").trim();
-  return rs || "Sem nome";
-}
 
 export default async function Page() {
   const nowISO = new Date().toISOString();

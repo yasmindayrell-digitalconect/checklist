@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import type { FinanceSeller, FinanceWeek } from "./FinanceClient";
+import { FinanceSeller, FinanceWeek} from "@/types/finance";
 import SellerRow from "./SellerRow";
-import { FINANCE_GRID } from "./utils";
+import {FINANCE_GRID } from "@/components/utils";
 
 export default function SellerTable({
   rows,

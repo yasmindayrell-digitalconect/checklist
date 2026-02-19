@@ -4,27 +4,8 @@ import { getServerSession } from "@/lib/serverSession";
 import { radarPool } from "@/lib/Db";
 import type { Row, ContatoRow, OpenBudgetCard, SellerKpiRow } from "@/types/dashboard";
 import DashboardClient from "@/components/dashboard/DashboardClient";
+import { toNumber, pickClientName, isActiveFlag } from "@/app/utils";
 
-function toNumber(v: unknown): number {
-  if (v == null) return 0;
-  if (typeof v === "number") return v;
-  const n = Number(String(v).replace(",", "."));
-  return Number.isFinite(n) ? n : 0;
-}
-
-function pickClientName(r: Row) {
-  const nf = (r.nome_fantasia ?? "").trim();
-  if (nf) return nf;
-  const rs = (r.nome_razao_social ?? "").trim();
-  return rs || "Sem nome";
-}
-
-function isActiveFlag(v?: string | null) {
-  const s = (v ?? "").trim().toUpperCase();
-  if (!s) return true;
-  if (s === "N" || s === "0" || s === "F") return false;
-  return true;
-}
 
 export default async function Page() {
   noStore();

@@ -3,8 +3,8 @@
 
 import React, { useMemo, useState } from "react";
 import SellerCard from "./SellerCard";
-import type { RankingSellerRow } from "@/app/(app)/ranking/page";
-import RankingHeader, { type BranchRow } from "./RankingHeader";
+import type { RankingSellerRow , BranchRow } from "@/types/ranking";
+import RankingHeader from "./RankingHeader";
 
 type SortKey = "week" | "monthGoal" | "positivity";
 type SortDir = "desc" | "asc";

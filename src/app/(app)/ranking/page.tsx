@@ -4,69 +4,11 @@ import { redirect } from "next/navigation";
 import RankingClient from "@/components/ranking/RankingClient";
 import { getServerSession } from "@/lib/serverSession";
 import { radarPool } from "@/lib/Db";
-
-function fmtMonthBR(date: Date) {
-  return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(date);
-}
-
-function toNumber(v: unknown): number {
-  if (v == null) return 0;
-  if (typeof v === "number") return v;
-  const n = Number(String(v).replace(",", "."));
-  return Number.isFinite(n) ? n : 0;
-}
-
-function clampInt(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
-
-// Semana (Seg–Sex) alinhada com seu SQL (date_trunc('week') = segunda)
-function getWeekRangeFromRef(ref: Date) {
-  const d = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate());
-  const jsDay = d.getDay(); // 0 dom ... 6 sáb
-  const diffToMonday = (jsDay + 6) % 7; // seg=0 ... dom=6
-  const monday = new Date(d);
-  monday.setDate(d.getDate() - diffToMonday);
-
-  const friday = new Date(monday);
-  friday.setDate(monday.getDate() + 4);
-
-  return { monday, friday };
-}
-
-function fmtBRShort(date: Date) {
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(date);
-}
-
-export type RankingSellerRow = {
-  seller_id: number;
-  seller_name: string | null;
-
-  // mensal
-  goal_meta: number;
-  net_sales: number;
-  pct_achieved: number;
-
-  // semanal
-  weekly_meta: number;
-  weekly_realized: number;
-  weekly_pct_achieved: number;
-  weekly_missing_value: number;
-  weekly_bonus: number;
-
-  wallet_total: number;            // total de clientes na carteira
-  wallet_positive_month: number;   // clientes positivados no mês (compraram no mês)
-  wallet_positive_pct: number;     // % positivação
-  need_message: number;            // precisa mandar mensagem
-  follow_up: number;               // acompanhar
-  open_budgets: number;   
-};
-
+import { toNumber, fmtMonthBR, clampInt, fmtBRShort, getWeekRangeFromRef, first} from "@/app/utils"; 
+import type { RankingSellerRow } from "@/types/ranking";
 type SP = Record<string, string | string[] | undefined> | undefined;
 
-function first(v: string | string[] | undefined) {
-  return Array.isArray(v) ? v[0] : v;
-}
+
 export default async function AdminRankingPage({
   searchParams,
 }: {

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import type { FinanceWeek } from "./FinanceClient";
+import type { FinanceWeek } from "@/types/finance";
 import WeekSelector from "./WeekSelector";
 
 export default function FinanceHeader({
