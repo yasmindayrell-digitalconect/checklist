@@ -11,7 +11,7 @@ export default function DashboardClient({
   openBudgetClients,
   sellerKpis,
 }: {
-  openBudgetClients: OpenBudgetCard[];   // ✅ AQUI
+  openBudgetClients: OpenBudgetCard[];  
   sellerKpis: SellerKpiRow[];
 }) {
   const kpi = sellerKpis?.[0] ?? null;

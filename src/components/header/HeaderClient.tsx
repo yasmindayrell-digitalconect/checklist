@@ -2,10 +2,9 @@
 
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { LogOut, HelpCircle, MessageSquareText } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { twoNames } from "@/types/auth";
 
 import HelpModal from "./HelpModal";
 import FeedbackModal, { type FeedbackType } from "./FeedbackModal";
