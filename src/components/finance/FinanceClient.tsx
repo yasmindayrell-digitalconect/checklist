@@ -142,20 +142,11 @@ export default function FinanceClient({ data }: { data: FinanceBonusesPayload })
       .sort((a, b) => (b.total || 0) - (a.total || 0));
   }, [data.sellers, selectedWeekKeys]);
 
-  const monthTotal = useMemo(() => sum(computedRows.map((r) => r.total)), [computedRows]);
-
-  const headerSummary = useMemo(() => {
-    const totalWeeks = data.weeks.length;
-    const pct = totalWeeks > 0 ? (selectedWeekCount / totalWeeks) * 100 : 0;
-    return { totalWeeks, selectedWeekCount, pct: clamp(pct, 0, 100) };
-  }, [data.weeks.length, selectedWeekCount]);
-
   return (
     <div className="mx-auto w-full max-w-8xl px-4 py-6">
 
       <FinanceHeader
         monthLabel={data.month.label}
-        monthYM={data.month.ym}
         weeks={data.weeks}
         selectedWeekKeys={selectedWeekKeys}
         onToggleWeek={(key) => {
@@ -166,18 +157,11 @@ export default function FinanceClient({ data }: { data: FinanceBonusesPayload })
             return next;
           });
         }}
-        onSelectAll={() => setSelectedWeekKeys(new Set(data.weeks.map((w) => w.mondayISO)))}
-        onClearAll={() => setSelectedWeekKeys(new Set())}
         onNavigateMonth={(delta) => {
           const nextYM = addMonths(data.month.ym, delta);
           const sp = new URLSearchParams(window.location.search);
           sp.set("month", nextYM);
           window.location.search = sp.toString();
-        }}
-        summary={{
-          selectedWeeks: headerSummary.selectedWeekCount,
-          totalWeeks: headerSummary.totalWeeks,
-          monthTotal,
         }}
       />
 

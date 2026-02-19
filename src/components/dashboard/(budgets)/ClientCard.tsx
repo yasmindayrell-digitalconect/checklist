@@ -5,7 +5,7 @@ import type { OpenBudgetCard } from "@/types/dashboard";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import PhonePickerModal from "@/components/dashboard/PhonePickerModal";
 import type { PhoneOption } from "@/types/dashboard";
-import {buildMessage, daysUntil, uniquePhonesFromClient,getAccentColor } from "../utils"
+import {buildMessage, uniquePhonesFromClient,getAccentColor } from "../utils"
 type Props = { client: OpenBudgetCard };
 
 
@@ -15,7 +15,7 @@ export default function DashboardClientCard({ client }: Props) {
 
 
 
-  const accentColor = useMemo(() => getAccentColor(client.orcamento_status), [client.orcamento_status]);
+  const accentColor = useMemo(() => getAccentColor(), [client.orcamento_status]);
 
   // contatos / whatsapp
   const phoneChoices = useMemo(() => uniquePhonesFromClient(client), [client]);

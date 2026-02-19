@@ -3,32 +3,19 @@
 import React from "react";
 import type { FinanceWeek } from "./FinanceClient";
 import WeekSelector from "./WeekSelector";
-import { formatBRL } from "./utils";
 
 export default function FinanceHeader({
   monthLabel,
-  monthYM,
   weeks,
   selectedWeekKeys,
   onToggleWeek,
-  onSelectAll,
-  onClearAll,
   onNavigateMonth,
-  summary,
 }: {
   monthLabel: string;
-  monthYM: string;
   weeks: FinanceWeek[];
   selectedWeekKeys: Set<string>;
   onToggleWeek: (mondayISO: string) => void;
-  onSelectAll: () => void;
-  onClearAll: () => void;
   onNavigateMonth: (delta: number) => void;
-  summary: {
-    selectedWeeks: number;
-    totalWeeks: number;
-    monthTotal: number;
-  };
 }) {
   return (
     <div className="flex justify-between items-start rounded-2xl border border-slate-200 bg-white p-4">    

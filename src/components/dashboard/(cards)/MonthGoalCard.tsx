@@ -62,17 +62,6 @@ export default function MonthGoalCard({
   const missingTo100 = Math.max(0, monthly_meta - monthly_realized);
   const missingTo110 = Math.max(0, monthly_meta * 1.1 - monthly_realized);
 
-  // Antes de 100%: barra 0..100
-  const barTo100 = useMemo(() => clamp(pct, 0, 100), [pct]);
-
-  // Depois de 100%: barra base fica 100% cheia
-  // e a “ponta” (10%) vai enchendo conforme 100..110
-  const superFillPct = useMemo(() => {
-    if (!hit100) return 0;
-    // progresso dentro do intervalo 100..110
-    const within = clamp(pct - 100, 0, 10); // 0..10
-    return (within / 10) * 100; // 0..100 do segmento ouro
-  }, [pct, hit100]);
 
   return (
     <div className="w-full rounded-2xl bg-white p-4 shadow-lg border border-gray-100">

@@ -30,7 +30,6 @@ export default function DailyGoalCard({
   const safeNetSales = netSales ?? 0;
 
   const remainingGoal = Math.max(0, safeGoal - safeNetSales);
-  const perDay = workdaysRemaining > 0 ? remainingGoal / workdaysRemaining : remainingGoal;
 
   const pctAchieved = safeGoal > 0 ? safeNetSales / safeGoal : 0;
   const pctTime = workdaysInMonth > 0 ? workdaysElapsed / workdaysInMonth : 0;

@@ -3,7 +3,6 @@
 import React from "react";
 import type { OpenBudgetCard } from "@/types/dashboard";
 import ClientCard from "@/components/dashboard/(budgets)/ClientCard";
-import { Client } from "pg";
 
 
 function statusStyle(status: string) {

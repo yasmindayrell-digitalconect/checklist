@@ -172,15 +172,6 @@ export default function HomeClient({ clients, nowISO }: Props) {
     }
   }
 
-  useEffect(() => {
-    const openBudget = localClients.filter((c) => c.tem_orcamento_aberto);
-    const inBudgetColumn = localClients.filter((c) => getBoardColumn(c) === "budget_open");
-    const openBudgetButOk = localClients.filter(
-      (c) => c.tem_orcamento_aberto && getBoardColumn(c) === "ok"
-    );
-  }, [localClients]);
-
-
 
   const canUndoMap = useMemo(() => {
     const m: Record<number, string | null> = {};

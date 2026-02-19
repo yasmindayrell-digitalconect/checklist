@@ -114,9 +114,6 @@ const contactLabel = showNextContact
       const phone = (c.telefone ?? "").trim();
       if (!phone) continue;
 
-      const labelBase = nome || "Contato";
-      const label = funcao ? `${labelBase} — ${funcao}` : labelBase;
-
       opts.push({
         id: String(c.id_contato),
         nome: nome || "Contato",

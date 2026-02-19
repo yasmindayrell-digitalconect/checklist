@@ -44,7 +44,7 @@ export function uniquePhonesFromClient(client: OpenBudgetCard): PhoneOption[] {
   return out;
 }
 
-export function getAccentColor(daysLeft: string | null) {
+export function getAccentColor() {
   // ✅ ajuste fácil aqui:
   // overdue -> amarelo
   // vence em até 3 dias -> laranja
