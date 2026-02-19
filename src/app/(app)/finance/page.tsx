@@ -3,13 +3,8 @@ import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/serverSession";
 import { radarPool } from "@/lib/Db";
-import FinanceClient, {
-  type FinanceBonusesPayload,
-  type FinanceSellerMonthly,
-  type FinanceSellerWallet,
-  type FinanceWeek,
-  type FinanceSellerWeek,
-} from "@/components/finance/FinanceClient";
+import FinanceClient from "@/components/finance/FinanceClient";
+import {FinanceBonusesPayload, FinanceSellerMonthly,FinanceSellerWallet, FinanceWeek, FinanceSellerWeek} from "@/types/finance"
 import { toNumber, fmtMonthBR, fmtBRShort, first} from "@/app/utils"; 
 
 type SP = Record<string, string | string[] | undefined> | undefined;
