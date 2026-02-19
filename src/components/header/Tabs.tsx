@@ -38,6 +38,13 @@ export default function HeaderTabs({ isAdmin }: { isAdmin: boolean }) {
           ranking
         </Link>
       )}
+
+      {isAdmin && (
+        <Link href="/finance" className={tabClass(isAdminDash)}>
+          <ShieldUser className="h-4 w-4" />
+          Financeiro
+        </Link>
+      )}
     </nav>
   );
 }

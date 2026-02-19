@@ -32,7 +32,6 @@ export default function BoardColumn({
 }: Props) {
   return (
     <section className="min-w-0 rounded-2xl bg-white shadow-sm border border-gray-100 h-full flex flex-col overflow-hidden">
-
       <div className="px-4 py-3 border-b border-gray-100 shrink-0 sticky top-0 bg-white z-10">
         <div className="flex items-start justify-between gap-3">
           <div>

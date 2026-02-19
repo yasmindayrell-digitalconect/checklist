@@ -1,13 +1,11 @@
 "use client";
 
 import type { OpenBudgetCard, SellerKpiRow } from "@/types/dashboard";
-import OpenBudgetsRow from "./OpenBudgetsRow";
-import BudgetAchieved from "./BudgetAchieved";
-import DailyGoalCard from "./GoalsCard";
-import WeekGoalCard from "./weekGoalsCard";
-import DaysCard from "./DaysCard";
-import DevolutionsCard from "./DevolutionCard";
-import MonthGoalCard from "./MonthGoalCard";
+import OpenBudgetsDashboard from "./(budgets)/OpenBudgetsDashboard";
+import WeekGoalCard from "./(cards)/weekGoalsCard";
+import DaysCard from "./(cards)/DaysCard";
+import DevolutionsCard from "./(cards)/DevolutionCard";
+import MonthGoalCard from "./(cards)/MonthGoalCard";
 
 export default function DashboardClient({
   openBudgetClients,
@@ -70,7 +68,7 @@ export default function DashboardClient({
           )}
         </div>
 
-        <OpenBudgetsRow clients={openBudgetClients} />
+        <OpenBudgetsDashboard clients={openBudgetClients} />
       </div>
     </div>
   );

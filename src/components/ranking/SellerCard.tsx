@@ -122,7 +122,7 @@ const monthBadge =
         </div>
 
         {/* POSITIVAÇÃO */}
-        <div className="md:relative md:pl-0 md:before:content-[''] md:before:absolute md:before:left-0 md:before:top-1/2 md:before:-translate-y-1/2 md:before:h-12 md:before:w-px md:before:bg-slate-100">
+        <div className="md:relative md:pl-10 md:before:content-[''] md:before:absolute md:before:left-0 md:before:top-1/2 md:before:-translate-y-1/2 md:before:h-12 md:before:w-px md:before:bg-slate-100">
           <WalletStatGroup
             label="" 
             pct={row.wallet_positive_pct}

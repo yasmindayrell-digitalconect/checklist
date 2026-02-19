@@ -15,6 +15,7 @@ function formatBRL(v: number) {
 
 export default function SellerGoalsCard({ row }: { row: SellerGoalsRow }) {
   const [currentWeekMeta, setCurrentWeekMeta] = useState<number>(row.current_week_meta ?? 0);
+   console.log(setCurrentWeekMeta)
 
   return (
     <div className="rounded-2xl bg-white border border-[#E9ECEF] border-l-4 border-l-[#80ef80] p-4 shadow-sm hover:shadow-md transition-shadow">
