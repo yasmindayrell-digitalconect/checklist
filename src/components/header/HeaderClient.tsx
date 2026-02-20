@@ -67,7 +67,7 @@ export default function HeaderActions({ sellerName }: { sellerName?: string }) {
     <>
       {/* Ações */}
       <div className="flex items-center gap-2">
-        <div className="text-white/50 font-extralight">Versão 2.3</div>
+        <div className="text-white/50 font-extralight">Versão 2.3.1</div>
         <button
           type="button"
           onClick={() => setIsHelpOpen(true)}
