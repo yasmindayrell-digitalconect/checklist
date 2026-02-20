@@ -51,16 +51,16 @@ export default function SellerRow({
           </div>
         </div>
 
-        <div className="text-right text-sm font-semibold text-slate-900">
+        <div className="text-right text-lg font-normal text-slate-900">
           {formatBRL(row.weeklyBonusSelected)}
         </div>
-        <div className="text-right text-sm font-semibold text-slate-900">
+        <div className="text-right text-lg font-normal text-slate-900">
           {formatBRL(row.monthlyBonus)}
         </div>
-        <div className="text-right text-sm font-semibold text-slate-900">
+        <div className="text-right text-lg font-normal text-slate-900">
           {formatBRL(row.positivityBonus)}
         </div>
-        <div className="text-right text-sm font-semibold text-[#2323ff]">
+        <div className="pr-5 text-right text-lg font-bold text-[#2323ff]">
           {formatBRL(row.total)}
         </div>
 

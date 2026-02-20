@@ -27,7 +27,7 @@ export default function SellerTable({
         <div className="text-right">Semanal (acum.)</div>
         <div className="text-right">Mensal</div>
         <div className="text-right">Positivação</div>
-        <div className="text-right pr-2">Total</div>
+        <div className="text-right pr-10">Total</div>
       </div>
 
       <div className="divide-y divide-slate-100">
