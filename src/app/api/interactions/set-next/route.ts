@@ -31,16 +31,17 @@ export async function POST(req: Request) {
   if (session.role === "seller") {
     let checkSql = `
       SELECT 1
-      FROM public.vw_web_clientes c
-      WHERE c.cadastro_id = $1
+      FROM public.cadastros cad
+      JOIN public.clientes c ON c.cadastro_id = cad.cadastro_id
+      WHERE cad.cadastro_id = $1
     `;
     const params: any[] = [id_cliente];
 
     if (session.sellerId === -1) {
-      checkSql += ` AND c.vendedor_id IS NULL`;
+      checkSql += ` AND c.funcionario_id IS NULL`;
     } else {
       params.push(session.sellerId);
-      checkSql += ` AND (c.vendedor_id)::int = $2::int`;
+      checkSql += ` AND (c.funcionario_id)::int = $2::int`;
     }
 
     checkSql += ` LIMIT 1`;

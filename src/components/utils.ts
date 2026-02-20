@@ -63,4 +63,4 @@ export function uniquePhonesFromClient(client: OpenBudgetCard): PhoneOption[] {
 }
 
 export const FINANCE_GRID =
-  "grid-cols-[minmax(220px,1.4fr)_minmax(120px,1fr)_minmax(120px,1fr)_minmax(120px,1fr)_minmax(120px,1fr)_96px]";
+  "grid-cols-[minmax(220px,0.5fr)_minmax(120px,1fr)_minmax(120px,1fr)_minmax(120px,1fr)_minmax(120px,1fr)_96px]";
