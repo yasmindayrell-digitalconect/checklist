@@ -58,7 +58,7 @@ export default function HeaderActions({ sellerName }: { sellerName?: string }) {
         credentials: "same-origin",
       });
     } finally {
-      router.replace("/select-user");
+      router.replace("/login");
       router.refresh();
     }
   }
@@ -67,7 +67,7 @@ export default function HeaderActions({ sellerName }: { sellerName?: string }) {
     <>
       {/* Ações */}
       <div className="flex items-center gap-2">
-        <div className="text-white/50 font-extralight">Versão 3.0</div>
+        <div className="text-white/50 font-extralight">Versão 2.3.1</div>
         <button
           type="button"
           onClick={() => setIsHelpOpen(true)}

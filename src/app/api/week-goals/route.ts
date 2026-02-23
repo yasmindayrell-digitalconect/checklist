@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { radarPool } from "@/lib/Db";
-import { getServerSession } from "@/lib/serverSession";
+import { getServerSession } from "@/lib/auth/serverSession";
 
 function toNumberBRL(v: unknown) {
   if (v == null) return NaN;

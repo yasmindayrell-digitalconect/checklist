@@ -1,6 +1,6 @@
 // src/app/api/interactions/mark/route.ts
 import { NextResponse } from "next/server";
-import { getServerSession } from "@/lib/serverSession";
+import { getServerSession } from "@/lib/auth/serverSession";
 import { radarPool } from "@/lib/Db";
 
 export async function POST(req: Request) {

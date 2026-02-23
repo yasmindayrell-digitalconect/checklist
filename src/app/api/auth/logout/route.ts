@@ -1,15 +1,7 @@
 import { NextResponse } from "next/server";
+import { clearServerSession } from "@/lib/auth/serverSession";
 
 export async function POST() {
-  const res = NextResponse.json({ ok: true });
-
-  res.cookies.set("app_user", "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  });
-
-  return res;
+  await clearServerSession();
+  return NextResponse.json({ ok: true });
 }

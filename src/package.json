@@ -17,6 +17,7 @@
     "@supabase/ssr": "github:supabase/ssr",
     "@supabase/supabase-js": "^2.87.1",
     "axios": "^1.12.2",
+    "bcryptjs": "^3.0.3",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "from": "^0.1.7",

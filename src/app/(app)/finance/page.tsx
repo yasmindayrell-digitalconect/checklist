@@ -1,12 +1,12 @@
 // app/(app)/finance/page.tsx
 import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
-import { getServerSession } from "@/lib/serverSession";
+import { getServerSession } from "@/lib/auth/serverSession";
 import { radarPool } from "@/lib/Db";
 import FinanceClient from "@/components/finance/FinanceClient";
 import {FinanceBonusesPayload, FinanceSellerMonthly,FinanceSellerWallet, FinanceWeek, FinanceSellerWeek} from "@/types/finance"
 import { toNumber, fmtMonthBR, fmtBRShort, first} from "@/app/utils"; 
-
+import { hasAccess } from "@/lib/auth/access";
 type SP = Record<string, string | string[] | undefined> | undefined;
 
 
@@ -35,8 +35,8 @@ export default async function FinancePage({
   noStore();
 
   const session = await getServerSession();
-  if (!session) redirect("/select-user");
-  if (session.role !== "admin") redirect("/dashboard");
+  if (!session) redirect("/login");
+  if (!hasAccess(session.accesses, "finance")) redirect("/");
 
   // mesmos sellers (pode deixar igual ao ranking por enquanto)
   const sellerIds = [244, 12, 17, 200, 110, 193, 114, 215, 108, 163];
