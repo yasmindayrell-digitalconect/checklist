@@ -1,21 +1,15 @@
-// vitest.config.ts
 import { defineConfig } from "vitest/config";
-import tsconfigPaths from "vite-tsconfig-paths";
-import { fileURLToPath, URL } from "node:url";
+import path from "node:path";
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  test: {
+    environment: "node",
+    globals: true,
+    clearMocks: true,
+  },
   resolve: {
     alias: {
-      "@": fileURLToPath(new URL("./", import.meta.url)), // 👈 mapa @ -> raiz do projeto
+      "@": path.resolve(__dirname, "./src"),
     },
   },
-  test: {
-    environment: "jsdom",
-    globals: true,
-    setupFiles: "./tests/setup/vitest.setup.ts",
-    css: false,
-    include: ["tests/**/*.test.{ts,tsx}"],
-  },
-  esbuild: { jsx: "automatic" },
 });
