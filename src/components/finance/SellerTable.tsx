@@ -15,6 +15,9 @@ export default function SellerTable({
     weeklyBonusSelected: number;
     monthlyBonus: number;
     positivityBonus: number;
+
+    commission: number;
+    salary: number;
     total: number;
   }>;
   allWeeks: FinanceWeek[];
@@ -22,11 +25,13 @@ export default function SellerTable({
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className={`grid ${FINANCE_GRID} items-center border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-600`}>
+      <div className={`grid ${FINANCE_GRID} items-center border-b border-slate-300 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-600`}>
         <div>Vendedor</div>
         <div className="text-right">Semanal (acum.)</div>
         <div className="text-right">Mensal</div>
         <div className="text-right">Positivação</div>
+        <div className="text-right">Comissão</div>
+        <div className="text-right pr-10">Salário</div>
         <div className="text-right pr-10">Total</div>
       </div>
 

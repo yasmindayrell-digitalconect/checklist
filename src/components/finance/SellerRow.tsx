@@ -15,6 +15,9 @@ export default function SellerRow({
     weeklyBonusSelected: number;
     monthlyBonus: number;
     positivityBonus: number;
+
+    commission: number;
+    salary: number;
     total: number;
   };
   allWeeks: FinanceWeek[];
@@ -60,7 +63,13 @@ export default function SellerRow({
         <div className="text-right text-lg font-normal text-slate-900">
           {formatBRL(row.positivityBonus)}
         </div>
-        <div className="pr-5 text-right text-lg font-bold text-[#2323ff]">
+        <div className="text-right text-lg font-normal text-slate-900">
+          {formatBRL(row.commission)}
+        </div>
+        <div className="text-right text-lg font-bold text-[#2323ff]">
+          {formatBRL(row.salary)}
+        </div>
+        <div className=" text-right text-lg font-bold text-[#2323ff]">
           {formatBRL(row.total)}
         </div>
 

@@ -40,6 +40,7 @@ export type FinanceSellerWallet = {
 export type FinanceSeller = {
   seller_id: number;
   seller_name: string | null;
+  base_salary: number;
   monthly: FinanceSellerMonthly;
   wallet: FinanceSellerWallet;
   weeks: FinanceSellerWeek[];

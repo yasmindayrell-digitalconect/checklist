@@ -48,19 +48,27 @@ export default function FinanceClient({ data }: { data: FinanceBonusesPayload })
         const monthlyBonus = s.monthly.month_bonus_value ?? 0;
         const positivityBonus = s.wallet.positivity_bonus_value ?? 0;
 
-        const total = weeklyBonusSelected + monthlyBonus + positivityBonus;
+        const commission = weeklyBonusSelected + monthlyBonus + positivityBonus; // 👈 total antigo
+        const salary = s.base_salary ?? 0; // 👈 novo
+        const total = commission + salary; // 👈 novo total
 
         return {
           seller: s,
           weeklyBonusSelected,
           monthlyBonus,
           positivityBonus,
-          total,
+
+          commission, // 👈 novo
+          salary,     // 👈 novo
+          total,      // 👈 agora é total novo
         };
       })
-      .sort((a, b) => (b.total || 0) - (a.total || 0));
+      .sort((a, b) => {
+        const an = (a.seller.seller_name ?? "").trim();
+        const bn = (b.seller.seller_name ?? "").trim();
+        return an.localeCompare(bn, "pt-BR", { sensitivity: "base" });
+      });
   }, [data.sellers, selectedWeekKeys]);
-
   return (
     <div className="mx-auto w-full max-w-8xl px-4 py-6">
 

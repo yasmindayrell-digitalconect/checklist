@@ -28,12 +28,12 @@
     "**/*.ts", 
     "**/*.tsx", 
     ".next/types/**/*.ts", 
-    "tests/**/*.ts",
-    "tests/**/*.tsx",
+    "test/**/*.ts",
+    "test/**/*.tsx",
     "cypress/**/*.ts", 
     "cypress/**/*.tsx", 
-    "tests/**/*.ts", 
-    "tests/**/*.tsx"
+    "test/**/*.ts", 
+    "test/**/*.tsx"
 , "teste.js"  ],
   "exclude": ["node_modules"]
 }

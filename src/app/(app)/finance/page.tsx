@@ -59,7 +59,10 @@ export default async function FinancePage({
           (EXTRACT(YEAR FROM $2::date)::int * 100 + EXTRACT(MONTH FROM $2::date)::int) AS ano_mes
       ),
       sellers AS (
-        SELECT f.funcionario_id::int AS seller_id, f.nome AS seller_name
+        SELECT
+          f.funcionario_id::int AS seller_id,
+          f.nome AS seller_name,
+          COALESCE(NULLIF(TRIM(f.salario::text), ''), '0')::numeric AS base_salary
         FROM public.funcionarios f
         WHERE upper(coalesce(f.ativo,'S')) NOT IN ('N','NAO','0','F','FALSE')
           AND f.funcionario_id IS NOT NULL
@@ -111,6 +114,7 @@ export default async function FinancePage({
         SELECT
           s.seller_id,
           s.seller_name,
+          s.base_salary, -- 👈 novo
           COALESCE(m.goal_meta, 0)::numeric AS goal_meta,
           (
             (COALESCE(v.valor_bruto_total, 0) - COALESCE(d.total_dev_valor, 0) - COALESCE(v.ajuste_desp_estorno, 0))
@@ -181,6 +185,7 @@ export default async function FinancePage({
     SELECT
       me.seller_id,
       me.seller_name,
+      me.base_salary, -- 👈 novo
       me.goal_meta,
       me.net_sales,
       me.pct_achieved,
@@ -356,36 +361,35 @@ ORDER BY b.seller_name, b.monday;
   const weeks = Array.from(weekMap.values()).sort((a, b) => a.mondayISO.localeCompare(b.mondayISO));
 
   // monthly + wallet por seller
-  const monthlyBySeller = new Map<number, { monthly: FinanceSellerMonthly; wallet: FinanceSellerWallet }>();
+  const monthlyBySeller = new Map<
+    number,
+    { base_salary: number; monthly: FinanceSellerMonthly; wallet: FinanceSellerWallet }
+  >();
+
   for (const r of mwRows as any[]) {
     const seller_id = Number(r.seller_id);
+
+    const base_salary = toNumber(r.base_salary); // 👈 novo
+
     const goal_meta = toNumber(r.goal_meta);
     const net_sales = toNumber(r.net_sales);
     const pct_achieved = toNumber(r.pct_achieved);
 
-    // bônus mensal (regra definida)
     const month_bonus_rate =
       pct_achieved >= 110 ? 0.001 : pct_achieved >= 100 ? 0.0005 : 0;
 
     const month_bonus_value = Math.round(net_sales * month_bonus_rate * 100) / 100;
 
-    // bônus por positivação por faixa
     const posPct = toNumber(r.wallet_positive_pct);
     let positivity_bonus_value = 0;
     let positivity_bonus_tier: "none" | "150" | "200" | "250" = "none";
 
-    if (posPct >= 80) {
-      positivity_bonus_value = 250;
-      positivity_bonus_tier = "250";
-    } else if (posPct >= 70) {
-      positivity_bonus_value = 200;
-      positivity_bonus_tier = "200";
-    } else if (posPct >= 60) {
-      positivity_bonus_value = 150;
-      positivity_bonus_tier = "150";
-    }
+    if (posPct >= 80) { positivity_bonus_value = 250; positivity_bonus_tier = "250"; }
+    else if (posPct >= 70) { positivity_bonus_value = 200; positivity_bonus_tier = "200"; }
+    else if (posPct >= 60) { positivity_bonus_value = 150; positivity_bonus_tier = "150"; }
 
     monthlyBySeller.set(seller_id, {
+      base_salary,
       monthly: {
         seller_id,
         seller_name: r.seller_name ?? null,
@@ -400,7 +404,6 @@ ORDER BY b.seller_name, b.monday;
         wallet_total: Number(r.wallet_total ?? 0),
         wallet_positive_month: Number(r.wallet_positive_month ?? 0),
         wallet_positive_pct: posPct,
-
         positivity_bonus_tier,
         positivity_bonus_value,
       },
@@ -431,6 +434,7 @@ ORDER BY b.seller_name, b.monday;
     return {
       seller_id: id,
       seller_name: mw?.monthly.seller_name ?? null,
+      base_salary: mw?.base_salary ?? 0, // 👈 novo
       monthly: mw?.monthly ?? {
         seller_id: id,
         seller_name: null,
