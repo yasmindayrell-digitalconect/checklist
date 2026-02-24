@@ -125,7 +125,7 @@ export default function RankingHeader({
       {showBranches && <RankingBranchRow rows={byBranch} />}  
 
       <div className="sticky top-0 z-30 mt-5 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-gray-100 backdrop-blur border-y border-slate-200">
-        <div className="grid grid-cols-[280px_1fr_1fr_1fr_auto] gap-6 items-start">
+        <div className="grid grid-cols-[280px_1fr_1fr_0.5fr_0.1fr] gap-6 items-start">
           <div className="text-[10px] font-bold text-slate-600 uppercase tracking-wider px-10">
             Vendedor
           </div>
