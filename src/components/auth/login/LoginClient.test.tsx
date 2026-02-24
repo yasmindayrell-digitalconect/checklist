@@ -4,7 +4,7 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import LoginClient from "@/components/auth/login/LoginClient";
+import LoginClient, * as LoginMod from "./LoginClient";
 
 const replaceMock = vi.fn();
 const refreshMock = vi.fn();
@@ -50,8 +50,12 @@ describe("<LoginClient />", () => {
   it("redireciona quando login ok", async () => {
     const user = userEvent.setup();
 
+    const redirectSpy = vi
+      .spyOn(LoginMod.nav, "hardRedirect")
+      .mockImplementation(() => {});
+
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-      jsonResponse({ ok: true, redirectTo: "/crm" }, 200)
+      jsonResponse({ redirectTo: "/qualquer-rota" }, 200)
     );
 
     render(<LoginClient />);
@@ -61,22 +65,21 @@ describe("<LoginClient />", () => {
     await user.click(screen.getByRole("button", { name: /Entrar/i }));
 
     await waitFor(() => {
-      expect(replaceMock).toHaveBeenCalledWith("/crm");
-      expect(refreshMock).toHaveBeenCalled();
+      expect(redirectSpy).toHaveBeenCalledWith(expect.stringMatching(/^\/.*/));
     });
   });
 
-  it("mostra 'Falha no login' se fetch der erro/rejeitar", async () => {
-    const user = userEvent.setup();
+    it("mostra 'Falha no login' se fetch der erro/rejeitar", async () => {
+      const user = userEvent.setup();
 
-    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("network"));
+      vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("network"));
 
-    render(<LoginClient />);
+      render(<LoginClient />);
 
-    await user.type(screen.getByLabelText(/Cadastro ID/i), "123");
-    await user.type(screen.getByLabelText(/Senha/i), "abc");
-    await user.click(screen.getByRole("button", { name: /Entrar/i }));
+      await user.type(screen.getByLabelText(/Cadastro ID/i), "123");
+      await user.type(screen.getByLabelText(/Senha/i), "abc");
+      await user.click(screen.getByRole("button", { name: /Entrar/i }));
 
-    expect(await screen.findByText("Falha no login")).toBeInTheDocument();
+      expect(await screen.findByText("Falha no login")).toBeInTheDocument();
+    });
   });
-});

@@ -10,6 +10,7 @@ function sum(nums: number[]) {
   return acc;
 }
 
+
 function addMonths(ym: string, delta: number) {
   // ym: "YYYY-MM"
   const m = /^(\d{4})-(\d{2})$/.exec((ym ?? "").trim());
