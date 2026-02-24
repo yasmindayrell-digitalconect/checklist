@@ -1,3 +1,5 @@
+// lib/auth/access.ts
+
 export type AppAccess = "crm" | "dashboard" | "finance" | "ranking";
 
 const cargosFinanceiro = new Set<number>([511, 502]);
@@ -19,7 +21,7 @@ export function accessesFromCargoId(cargoId: number): AppAccess[] {
   if (cargosVendedor.has(cargoId)) {
     return ["crm", "dashboard"];
   }
-  return []; // sem acesso
+  return [];
 }
 
 export function hasAccess(accesses: AppAccess[], needed: AppAccess) {

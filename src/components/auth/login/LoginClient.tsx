@@ -1,6 +1,8 @@
+//components\auth\login\LoginClient.tsx
+
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginClient() {
@@ -39,18 +41,24 @@ export default function LoginClient() {
       <form onSubmit={onSubmit} className="w-full max-w-sm rounded-2xl border bg-white p-6 shadow-sm">
         <h1 className="text-lg font-semibold text-gray-900">Entrar</h1>
         <p className="mt-1 text-sm text-gray-500">Use seu cadastro_id e senha.</p>
-
-        <label className="mt-5 block text-sm font-medium text-gray-700">Cadastro ID</label>
+        <label htmlFor="cadastro_id" className="mt-5 block text-sm font-medium text-gray-700">
+          Cadastro ID
+        </label>
         <input
+          id="cadastro_id"
+          name="cadastro_id"
           value={cadastroId}
           onChange={(e) => setCadastroId(e.target.value)}
           inputMode="numeric"
           className="mt-2 w-full rounded-xl border px-3 py-2"
           placeholder="ex: 12345"
         />
-
-        <label className="mt-4 block text-sm font-medium text-gray-700">Senha</label>
+        <label htmlFor="senha" className="mt-4 block text-sm font-medium text-gray-700">
+          Senha
+        </label>
         <input
+          id="senha"
+          name="senha"
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
           type="password"

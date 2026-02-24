@@ -1,3 +1,5 @@
+//lib\auth\landing.ts
+
 import type { AppAccess } from "@/lib/auth/access";
 
 const ORDER: AppAccess[] = ["crm", "dashboard", "ranking", "finance"];
