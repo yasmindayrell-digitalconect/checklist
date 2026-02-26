@@ -192,7 +192,7 @@ return (
                         style={{
                           width: `${(pctClamped / 100) * 100}%`,
                           backgroundColor: good ? "#80ef80" : "#2323ff",
-                        }}
+                        }} 
                       />
                     </div>
                   </div>
