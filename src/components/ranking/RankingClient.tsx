@@ -2,9 +2,9 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import SellerCard from "./SellerCard";
+import SellerCard from "./(sellers)/SellerCard";
 import type { RankingSellerRow , BranchRow } from "@/types/ranking";
-import RankingHeader from "./RankingHeader";
+import RankingHeader from "./(header)/RankingHeader";
 
 type SortKey = "week" | "monthGoal" | "positivity";
 type SortDir = "desc" | "asc";
@@ -99,20 +99,19 @@ export default function RankingClient({
     <div className="w-full">
       <div className="rounded-2xl bg-white border border-gray-100 shadow-lg">
         <RankingHeader
-          weekOffset={weekOffset}
-          weekLabel={weekLabel}
-          monthLabel={monthLabel}
-          totalMonthGoal={totalMonthGoal}
-          totalMonthSold={totalMonthSold}
-          totalMonthPct={totalMonthPct}
-          byBranch={byBranch}
-          // 👇 novo
-          sortKey={sortKey}
-          sortDir={sortDir}
-          onChangeSortKey={setSortKey}
-          onToggleSortDir={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
-        />
-
+            weekOffset={weekOffset}
+            weekLabel={weekLabel}
+            monthLabel={monthLabel}
+            totalMonthGoal={totalMonthGoal}
+            totalMonthSold={totalMonthSold}
+            totalMonthPct={totalMonthPct}
+            byBranch={byBranch}
+            sellers={sellers}   // ✅ novo (pra exportar por vendedor)
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onChangeSortKey={setSortKey}
+            onToggleSortDir={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
+          />
         <div className="px-4 sm:px-6">
           <div className="flex flex-col gap-4 pt-4">
             {ranked.map((row, idx) => (

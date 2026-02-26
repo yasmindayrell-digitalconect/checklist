@@ -2,10 +2,14 @@
 
 export type AppRole = "seller" | "admin";
 
+import type { AppAccess } from "@/lib/auth/access";
+
 export type AppUser = {
-  role: AppRole;
-  sellerId?: number;      // só quando role === "seller"
-  sellerName: string;     // nome que aparece na UI
+  funcionarioId: number;
+  cadastroId: number;
+  cargoId: number;
+  name: string;
+  accesses: AppAccess[];
 };
 
 export function twoNames(fullName?: string) {

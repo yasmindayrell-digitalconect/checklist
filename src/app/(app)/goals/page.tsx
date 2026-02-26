@@ -1,12 +1,12 @@
 // app/(app)/goals/page.tsx
 import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
-import { getServerSession } from "@/lib/serverSession";
+import { getServerSession } from "@/lib/auth/serverSession";
 import { radarPool } from "@/lib/Db";
 import GoalsDashboardClient from "@/components/goals/GoalsEditorClient";
 import {GoalsHeaderData, SellerGoalsRow, WeekMetaItem} from "@/types/goals"
 import { toNumber, fmtMonthBR, clampInt, fmtBRShort, getWeekRangeFromRef } from "@/app/utils"; 
-
+import { hasAccess } from "@/lib/auth/access";
 type SP = { weekOffset?: string };
 
 export default async function GoalsPage({ searchParams }: { searchParams?: Promise<SP> }) {
@@ -15,8 +15,8 @@ export default async function GoalsPage({ searchParams }: { searchParams?: Promi
   const weekOffset = clampInt(Number(sp?.weekOffset ?? 0), -104, 104);
 
   const session = await getServerSession();
-  if (!session) redirect("/select-user");
-  if (session.role !== "admin") redirect("/dashboard");
+  if (!session) redirect("/login");
+  if (!hasAccess(session.accesses, "ranking")) redirect("/");
 
   // mesmos sellers do ranking (ajuste livre)
   const sellerIds = [244, 12, 17, 200, 110, 193, 114, 215, 108, 163];

@@ -1,4 +1,4 @@
-//lib/serverSession.ts
+//lib\auth\serverSession.ts
 
 import { cookies } from "next/headers";
 

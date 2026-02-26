@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Target, LayoutGrid, ShieldUser } from "lucide-react";
+import { hasAccess, type AppAccess } from "@/lib/auth/access";
 
 function tabClass(active: boolean) {
   return [
@@ -13,34 +14,47 @@ function tabClass(active: boolean) {
   ].join(" ");
 }
 
-export default function HeaderTabs({ isAdmin }: { isAdmin: boolean }) {
+export default function HeaderTabs({ accesses }: { accesses: AppAccess[] }) {
   const pathname = usePathname();
+
+  const canCrm = hasAccess(accesses, "crm");
+  const canDash = hasAccess(accesses, "dashboard");
+  const canRanking = hasAccess(accesses, "ranking");
+  const canFinance = hasAccess(accesses, "finance");
 
   const isCrm = pathname === "/" || pathname.startsWith("/crm") || pathname.startsWith("/vendas");
   const isDash = pathname.startsWith("/dashboard");
-  const isAdminDash = pathname.startsWith("/adminDashboard");
+  const isRanking = pathname.startsWith("/ranking");
+  const isFinance = pathname.startsWith("/finance");
+
+  // se o usuário não tiver nenhuma tab, nem mostra o nav
+  if (!canCrm && !canDash && !canRanking && !canFinance) return null;
 
   return (
     <nav className="inline-flex items-center gap-1 rounded-2xl p-1" aria-label="Navegação">
-      <Link href="/" className={tabClass(isCrm)}>
-        <Target className="truncate h-4 w-4" />
-        CRM/Vendas
-      </Link>
-
-      <Link href="/dashboard" className={tabClass(isDash)}>
-        <LayoutGrid className="h-4 w-4" />
-        Dashboard
-      </Link>
-
-      {isAdmin && (
-        <Link href="/ranking" className={tabClass(isAdminDash)}>
-          <ShieldUser className="h-4 w-4" />
-          ranking
+      {canCrm && (
+        <Link href="/crm" className={tabClass(isCrm)}>
+          <Target className="h-4 w-4" />
+          CRM/Vendas
         </Link>
       )}
 
-      {isAdmin && (
-        <Link href="/finance" className={tabClass(isAdminDash)}>
+      {canDash && (
+        <Link href="/dashboard" className={tabClass(isDash)}>
+          <LayoutGrid className="h-4 w-4" />
+          Dashboard
+        </Link>
+      )}
+
+      {canRanking && (
+        <Link href="/ranking" className={tabClass(isRanking)}>
+          <ShieldUser className="h-4 w-4" />
+          Ranking
+        </Link>
+      )}
+
+      {canFinance && (
+        <Link href="/finance" className={tabClass(isFinance)}>
           <ShieldUser className="h-4 w-4" />
           Financeiro
         </Link>
