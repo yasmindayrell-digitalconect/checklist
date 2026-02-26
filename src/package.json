@@ -7,12 +7,10 @@
     "build": "next build --turbopack",
     "start": "next start -p 80",
     "lint": "eslint",
-
     "test": "vitest",
     "test:unit": "vitest run",
     "test:ci": "vitest run",
     "test:ui": "vitest --ui",
-
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "test:e2e": "start-server-and-test dev http://localhost:3000 cy:run"
@@ -26,6 +24,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "from": "^0.1.7",
+    "html-to-image": "^1.11.13",
     "import": "^0.0.6",
     "lucide-react": "^0.546.0",
     "next": "^15.5.7",

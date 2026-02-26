@@ -1,16 +1,24 @@
-//components\ranking\RankingHeader.tsx
-
 "use client";
 
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { formatBRL, formatPct } from "@/components/utils";
 import RankingBranchRow from "./RankingBranchRow";
-import type { BranchRow } from "@/types/ranking"; 
+import type { BranchRow, RankingSellerRow } from "@/types/ranking";
+import { FileDown } from "lucide-react";
+import ExportOptions from "./ExportOptions";
+import RankingExportRender from "./RankingExportRender";
+import { toPng } from "html-to-image";
+
+type ExportKey =
+  | "branches_monthly"
+  | "branches_daily"
+  | "sellers_week_goals"
+  | "sellers_month_goals"
+  | "sellers_positivation";
 
 type SortKey = "week" | "monthGoal" | "positivity";
 type SortDir = "desc" | "asc";
-
 
 export default function RankingHeader({
   weekOffset,
@@ -20,6 +28,7 @@ export default function RankingHeader({
   totalMonthSold,
   totalMonthPct,
   byBranch,
+  sellers,
   sortKey,
   sortDir,
   onChangeSortKey,
@@ -32,16 +41,92 @@ export default function RankingHeader({
   totalMonthSold: number;
   totalMonthPct: number;
   byBranch: BranchRow[];
-   sortKey: SortKey;
+  sellers: RankingSellerRow[];
+  sortKey: SortKey;
   sortDir: SortDir;
   onChangeSortKey: (k: SortKey) => void;
   onToggleSortDir: () => void;
 }) {
   const [showBranches, setShowBranches] = useState(true);
+  const [showExport, setShowExport] = useState(false);
+
+  const [exportKey, setExportKey] = useState<ExportKey | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const exportRef = useRef<HTMLDivElement | null>(null);
+
+  async function handleSelect(key: ExportKey) {
+    setShowExport(false);
+    setExporting(true);
+    setExportKey(key);
+
+    // 1) aguarda render + layout
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+
+    // 2) aguarda fonts (se existir)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (document as any).fonts?.ready?.catch?.(() => null);
+
+    // 3) mais 1 frame pra garantir medidas corretas
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+
+    const node = exportRef.current;
+    if (!node) {
+      setExporting(false);
+      setExportKey(null);
+      return;
+    }
+
+    const rect = node.getBoundingClientRect();
+    const width = Math.ceil(rect.width || 1080);
+    const height = Math.ceil(rect.height || 1200);
+
+    try {
+      const dataUrl = await toPng(node, {
+        cacheBust: true,
+        pixelRatio: 2,
+        width,
+        height,
+      });
+
+      const safeKey = key.replaceAll("_", "-");
+      const fileName = `ranking-${safeKey}-${new Date().toISOString().slice(0, 10)}.png`;
+
+      // dataURL -> Blob
+      const blob = await (await fetch(dataUrl)).blob();
+
+      // ✅ Tenta copiar a imagem pro clipboard (melhor experiência no desktop)
+      if (navigator.clipboard && "ClipboardItem" in window) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const ClipboardItemAny = (window as any).ClipboardItem;
+
+        await navigator.clipboard.write([
+          new ClipboardItemAny({ "image/png": blob }),
+        ]);
+
+        window.open("https://web.whatsapp.com", "_blank", "noopener,noreferrer");
+        alert("Imagem copiada! No WhatsApp Web, escolha o chat e cole (Ctrl+V) para enviar.");
+        return;
+      }
+
+      // fallback: abre WhatsApp Web e baixa o arquivo (caso clipboard não suporte)
+      window.open("https://web.whatsapp.com", "_blank", "noopener,noreferrer");
+
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = fileName;
+      a.click();
+    } catch (e) {
+      console.error("export png failed", e);
+    } finally {
+      setExporting(false);
+      setExportKey(null);
+    }
+  }
 
   return (
     <>
-      {/* Top bar */}
+      {/* ✅ Top bar ORIGINAL (com botões) */}
       <div className="px-4 sm:px-6 py-4 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
         {/* Left */}
         <div className="min-w-0">
@@ -50,7 +135,7 @@ export default function RankingHeader({
             Acompanhe o desempenho semanal e a projeção mensal.
           </p>
 
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex flex-wrap items-center gap-2 mt-2">
             <Link
               href="/goals"
               className="inline-flex items-center justify-center rounded-md bg-[#58da58] px-4 py-2 text-xs font-semibold text-white shadow-md hover:bg-emerald-700 transition"
@@ -64,6 +149,16 @@ export default function RankingHeader({
               className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-xs font-semibold text-slate-700 border border-slate-200 shadow-sm hover:bg-slate-50 transition"
             >
               {showBranches ? "Ocultar filiais" : "Ver filiais"}
+            </button>
+
+            <button
+              type="button"
+              className="flex gap-1 items-center justify-center rounded-md bg-white px-4 py-2 text-xs font-semibold text-slate-700 border border-slate-200 shadow-sm hover:bg-slate-50 transition disabled:opacity-60"
+              onClick={() => setShowExport(true)}
+              disabled={exporting}
+            >
+              {exporting ? "Gerando..." : "Exportar"}{" "}
+              <FileDown className="h-4 w-4 text-slate-700" />
             </button>
           </div>
         </div>
@@ -118,12 +213,13 @@ export default function RankingHeader({
               </Link>
             </div>
           </div>
-
-        </div>       
+        </div>
       </div>
 
-      {showBranches && <RankingBranchRow rows={byBranch} />}  
+      {/* Filiais */}
+      {showBranches && <RankingBranchRow rows={byBranch} />}
 
+      {/* Sticky header de colunas + sort */}
       <div className="sticky top-0 z-30 mt-5 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-gray-100 backdrop-blur border-y border-slate-200">
         <div className="grid grid-cols-[280px_1fr_1fr_0.5fr_0.1fr] gap-6 items-start">
           <div className="text-[10px] font-bold text-slate-600 uppercase tracking-wider px-10">
@@ -151,7 +247,6 @@ export default function RankingHeader({
             </div>
           </div>
 
-          {/* CONTROLES DE ORDENAÇÃO */}
           <div className="flex items-center justify-end gap-2 px-3">
             <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
               Ordenar
@@ -170,7 +265,7 @@ export default function RankingHeader({
             <button
               type="button"
               onClick={onToggleSortDir}
-              disabled={sortKey === "week"} // opcional: semana sempre padrão
+              disabled={sortKey === "week"}
               className={[
                 "h-8 rounded-lg border px-2 text-xs font-bold",
                 sortKey === "week"
@@ -184,6 +279,29 @@ export default function RankingHeader({
           </div>
         </div>
       </div>
-  </>
+
+      {/* Modal de export */}
+      {showExport && (
+        <ExportOptions
+          open={showExport}
+          onClose={() => setShowExport(false)}
+          onSelect={handleSelect}
+        />
+      )}
+
+      {/* Render oculto pro PNG */}
+     <div
+      style={{ position: "fixed", left: -10000, top: 0, width: 800, pointerEvents: "none", zIndex: -1 }}
+    >
+      <RankingExportRender
+        ref={exportRef}
+        exportKey={exportKey}
+        weekLabel={weekLabel}
+        monthLabel={monthLabel}
+        sellers={sellers}
+        byBranch={byBranch}
+      />
+    </div>
+    </>
   );
 }

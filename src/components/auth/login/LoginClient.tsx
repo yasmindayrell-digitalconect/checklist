@@ -3,6 +3,7 @@
 
 import React, { useMemo, useState } from "react";   
 import { MonitorCog, Lock } from "lucide-react";
+import Image from "next/image";
 
 export const nav = {
   hardRedirect(dest: string) {
@@ -48,22 +49,37 @@ export default function LoginClient() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0b0f3a] px-6 py-10">
-      {/* Fundo estilo “prints”: gradiente + shapes */}
-      <div className="pointer-events-none absolute inset-0">
-        {/* glow azul */}
-        <div className="absolute -top-28 left-1/2 h-130 w-130 -translate-x-1/2 rounded-full bg-[#2323ff]/35 blur-3xl" />
-        {/* glow verde */}
-        <div className="absolute -bottom-32 left-10 h-130 w-130 rounded-full bg-[#80ef80]/20 blur-3xl" />
-        {/* shapes */}
-        <div className="absolute -right-30 top-24 h-85 w-85 rotate-12 rounded-[48px] bg-[#2323ff]/20 blur-[1px]" />
-        <div className="absolute -left-35 top-44 h-75 w-75 -rotate-12 rounded-[48px] bg-[#80ef80]/10 blur-[1px]" />
-        {/* grid sutil */}
-        <div className="absolute inset-0 opacity-[0.08] bg-[linear-gradient(to_right,white_1px,transparent_1px),
-        linear-gradient(to_bottom,white_1px,transparent_1px)]" />
+    <div className="relative min-h-screen overflow-hidden px-6 py-10">
+      {/* BACKGROUND */}
+      <div className="absolute inset-0 -z-20">
+        <Image
+          src="/BACKGROUND.png"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-[#0b0f3a]/55" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md items-center">
+      {/* CONTEÚDO CENTRAL */}
+    <div className="relative z-10 mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md items-center">
+      <div className="w-full">
+        {/* LOGO (em cima do card) */}
+        <div className="flex justify-center -mb-20 -mt-30">
+          <div className="relative w-64 sm:w-80 md:w-400 aspect-1.5/1">
+            <Image
+              src="/LOGO.png"
+              alt="Conecta 360"
+              fill
+              priority
+              className="object-contain object-[center_20%]"
+            />
+          </div>
+        </div>
+
+        {/* CARD */}
         <form
           onSubmit={onSubmit}
           className="w-full rounded-3xl border border-white/10 bg-white/10 p-6 shadow-2xl backdrop-blur-xl"
@@ -74,7 +90,7 @@ export default function LoginClient() {
                 Entrar
               </h1>
               <p className="text-sm text-white/60">
-                Acesse com seu <span className="text-white/80">cadastro_id</span> e senha.
+                Acesse com seu <span className="text-white/80">código de cadastro</span> e senha.
               </p>
             </div>
           </div>
@@ -153,11 +169,12 @@ export default function LoginClient() {
           <div className="mt-6 flex items-center justify-between text-xs text-white/35">
             <span className="inline-flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-[#80ef80]/80" />
-              Digital Conect
+              By Digital Conect
             </span>
           </div>
         </form>
       </div>
     </div>
+  </div>
   );
 }

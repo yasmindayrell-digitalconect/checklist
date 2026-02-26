@@ -37,9 +37,7 @@ export default function WalletStatGroup({
             {safePct.toFixed(1)}%
           </span>
         </div>
-
-
-
+        
         <div className="relative h-3 bg-slate-100 rounded-full overflow-hidden shadow-inner">
           <div
             className={[
