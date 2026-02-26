@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "@/lib/serverSession";
+import { getServerSession } from "@/lib/auth/serverSession";
 import { radarPool } from "@/lib/Db";
 
 function parseDate(d: any): Date | null {

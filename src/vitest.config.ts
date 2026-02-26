@@ -1,21 +1,46 @@
 // vitest.config.ts
 import { defineConfig } from "vitest/config";
-import tsconfigPaths from "vite-tsconfig-paths";
-import { fileURLToPath, URL } from "node:url";
+import path from "node:path";
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  test: {
+    globals: true,
+    environment: "node",
+    setupFiles: ["./test/setup.ts"],
+
+    // ✅ só procura testes no seu código
+    include: [
+      "app/**/*.test.ts",
+      "app/**/*.test.tsx",
+      "lib/**/*.test.ts",
+      "lib/**/*.test.tsx",
+      "components/**/*.test.ts",
+      "components/**/*.test.tsx",
+    ],
+
+    // ✅ exclui tudo que costuma “vazar”
+    exclude: [
+      "**/node_modules/**",
+      "**/.next/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/coverage/**",
+      "**/cypress/**",
+      "**/playwright/**",
+      "**/AppData/**",
+      "**/npm-cache/**",
+      "**/Cypress/**",
+    ],
+
+    clearMocks: true,
+    restoreMocks: true,
+    mockReset: true,
+  },
+
+  // ✅ como seu root já é /src, o @ deve apontar pra ele mesmo
   resolve: {
     alias: {
-      "@": fileURLToPath(new URL("./", import.meta.url)), // 👈 mapa @ -> raiz do projeto
+      "@": path.resolve(__dirname, "."),
     },
   },
-  test: {
-    environment: "jsdom",
-    globals: true,
-    setupFiles: "./tests/setup/vitest.setup.ts",
-    css: false,
-    include: ["tests/**/*.test.{ts,tsx}"],
-  },
-  esbuild: { jsx: "automatic" },
 });

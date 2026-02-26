@@ -1,36 +1,39 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
-import { getServerSession } from "@/lib/serverSession";
+import { getServerSession } from "@/lib/auth/serverSession";
 import { radarPool } from "@/lib/Db";
 import type { Row, ContatoRow, OpenBudgetCard, SellerKpiRow } from "@/types/dashboard";
 import DashboardClient from "@/components/dashboard/DashboardClient";
 import { toNumber, pickClientName, isActiveFlag } from "@/app/utils";
-
+import { hasAccess } from "@/lib/auth/access";
 
 export default async function Page() {
   noStore();
 
   const session = await getServerSession();
-  if (!session) redirect("/select-user");
-
-  const sellerIds =
-    session.role === "admin"
-      ? [244, 12, 17, 200, 110, 193, 114, 215, 108, 163]
-      : null;
+  if (!session) redirect("/login");
+  if (!hasAccess(session.accesses, "dashboard")) redirect("/");
 
   // -----------------------------
   // (A) Open Budgets (cards)
   // -----------------------------
+  const isSeller = session.cargoId === 2;
+
   const openBudgetArgs: any[] = [];
   let openBudgetWhere = `1=1`;
 
-  if (session.role === "seller") {
-    openBudgetArgs.push(session.sellerId);
+  // vendedor vê só a carteira dele
+  if (isSeller) {
+    openBudgetArgs.push(session.funcionarioId);
     openBudgetWhere += ` AND (o.vendedor_id)::int = $${openBudgetArgs.length}::int`;
-  } else if (session.role === "admin") {
-    openBudgetArgs.push(sellerIds);
-    openBudgetWhere += ` AND o.vendedor_id IS NOT NULL AND (o.vendedor_id)::int = ANY($${openBudgetArgs.length}::int[])`;
-  }
+}
+
+// os outros veem tudo → não filtra
+// (se quiser, pode filtrar só "com vendedor", opcional)
+// else {
+//   openBudgetWhere += ` AND o.vendedor_id IS NOT NULL`;
+// }
+ 
 
   const sqlOpenBudgets = `
     WITH contatos AS (
@@ -129,7 +132,7 @@ export default async function Page() {
   const openBudgetClients: OpenBudgetCard[] = openBudgetRows.map((r) => {
     const clientId = Number(r.cadastro_id);
     const sellerId = r.vendedor_id == null ? null : Number(r.vendedor_id);
-    const isCarteira = session.role === "seller" ? sellerId === session.sellerId : true;
+    const isCarteira = isSeller ? sellerId === session.funcionarioId : true;
 
     const contatos: ContatoRow[] = (r.contatos_json ?? []).map((c) => ({
       id_contato: c.id_contato,
@@ -173,15 +176,15 @@ export default async function Page() {
   let kpiWhere = `1=1`;
   let kpiWhereWeekly = `1=1`;
 
-  if (session.role === "seller") {
-    kpiArgs.push(session.sellerId);
-    kpiWhere = `v.vendedor_id::int = $${kpiArgs.length}::int`;
-    kpiWhereWeekly = `f.funcionario_id::int = $${kpiArgs.length}::int`;
-  } else if (session.role === "admin") {
-    kpiArgs.push(sellerIds);
-    kpiWhere = `v.vendedor_id IS NOT NULL AND v.vendedor_id::int = ANY($${kpiArgs.length}::int[])`;
-    kpiWhereWeekly = `f.funcionario_id IS NOT NULL AND f.funcionario_id::int = ANY($${kpiArgs.length}::int[])`;
+    if (isSeller) {
+    kpiArgs.push(session.funcionarioId);
+    const p = kpiArgs.length;
+
+    kpiWhere = `v.vendedor_id::int = $${p}::int`;
+    kpiWhereWeekly = `f.funcionario_id::int = $${p}::int`;
   }
+
+
   const sqlKpisNetSales = `
     WITH
     /* =========================

@@ -1,22 +1,17 @@
 // app/(app)/layout.tsx
-
 import Header from "@/components/header/Header";
-import { getServerSession } from "@/lib/serverSession";
+import { getServerSession } from "@/lib/auth/serverSession";
+import { redirect } from "next/navigation";
 
-export default async function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession();
-  const isAdmin = session?.role === "admin";
+
+  // opcional, mas recomendado: trava tudo do (app)
+  if (!session) redirect("/login");
 
   return (
     <>
-      {/* Header fixo */}
-      <Header sellerName={session?.sellerName} isAdmin={!!isAdmin} />
-
-      {/* Conteúdo (sem sidebar) */}
+      <Header sellerName={session.name} accesses={session.accesses} />
       <main className="pt-16 min-w-0">{children}</main>
     </>
   );

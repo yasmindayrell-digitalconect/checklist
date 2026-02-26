@@ -3,7 +3,7 @@
 "use client";
 
 import React from "react";
-import type { BranchRow } from "./RankingHeader";
+import type { BranchRow } from "@/types/ranking";
 import BranchGoalCard from "./BranchGoalCard";
 import BranchDailyCard from "./BranchDailyCard";
 

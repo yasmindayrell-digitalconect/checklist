@@ -2,10 +2,12 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
 import RankingClient from "@/components/ranking/RankingClient";
-import { getServerSession } from "@/lib/serverSession";
+import { getServerSession } from "@/lib/auth/serverSession";
 import { radarPool } from "@/lib/Db";
 import { toNumber, fmtMonthBR, clampInt, fmtBRShort, getWeekRangeFromRef, first} from "@/app/utils"; 
 import type { RankingSellerRow } from "@/types/ranking";
+import { hasAccess } from "@/lib/auth/access";
+
 type SP = Record<string, string | string[] | undefined> | undefined;
 
 
@@ -17,8 +19,8 @@ export default async function AdminRankingPage({
   noStore();
 
   const session = await getServerSession();
-  if (!session) redirect("/select-user");
-  if (session.role !== "admin") redirect("/dashboard");
+  if (!session) redirect("/login");
+  if (!hasAccess(session.accesses, "ranking")) redirect("/");
 
   // mesmos sellers do dashboard (ajuste se quiser dinâmico)
   const sellerIds = [244, 12, 17, 200, 110, 193, 114, 215, 108, 163];
