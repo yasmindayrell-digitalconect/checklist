@@ -4,7 +4,7 @@ export type AppAccess = "crm" | "dashboard" | "finance" | "ranking";
 
 const cargosFinanceiro = new Set<number>([511, 502]);
 const cargosDiretoria = new Set<number>([501, 11, 610]);
-const cargosVendedor = new Set<number>([2]);
+const cargosVendedor = new Set<number>([2, 605]);
 const cargosGerenteVendas = new Set<number>([500]);
 const cargosDevs = new Set<number>([4, 629]);
 
