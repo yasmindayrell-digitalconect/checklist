@@ -45,13 +45,23 @@ const RankingExportRender = React.forwardRef<HTMLDivElement, Props>(function Ran
   const subtitle = exportKey.includes("week") ? `Semana: ${weekLabel}` : `Mês: ${monthLabel}`;
 
   const rows =
-    exportKey === "branches_monthly" || exportKey === "branches_daily"
+    exportKey === "branches_monthly" 
       ? [...byBranch]
           .sort((a, b) => n(b.pct) - n(a.pct))
           .slice(0, 16)
           .map((r) => ({
             name: r.name,
-            realized: formatBRL(n((r as any).realized_today)),
+            realized: formatBRL(r.realized),
+            info: `Ating. mensal ->`,
+            pct: n(r.pct),
+          }))
+    : exportKey === "branches_daily"
+      ? [...byBranch]
+          .sort((a, b) => n(b.pct) - n(a.pct))
+          .slice(0, 16)
+          .map((r) => ({
+            name: r.name,
+            realized: formatBRL(r.realized_today),
             info: `Ating. mensal ->`,
             pct: n(r.pct),
           }))
@@ -149,7 +159,7 @@ return (
                       className={[
                         "shrink-0 grid place-items-center rounded-xl font-bold tabular-nums",
                         top3
-                          ? "h-10 w-10 bg-[#80ef80]/50 text-[#109c10]"
+                          ? "h-10 w-10 bg-[#34da34] text-[#ffffff]"
                           : "h-10 w-10 bg-[#2323ff]/10 text-[#2323ff]",
                       ].join(" ")}
                     >
@@ -180,7 +190,7 @@ return (
                     <div
                       className={[
                         "text-lg font-bold tabular-nums",
-                        good ? "text-[#80ef80]" : "text-[#2323ff]",
+                        good ? "text-[#34da34]" : "text-[#2323ff]",
                       ].join(" ")}
                     >
                       {formatPct(pct)}
@@ -191,7 +201,7 @@ return (
                         className="h-full rounded-full"
                         style={{
                           width: `${(pctClamped / 100) * 100}%`,
-                          backgroundColor: good ? "#80ef80" : "#2323ff",
+                          backgroundColor: good ? "#34da34" : "#2323ff",
                         }} 
                       />
                     </div>

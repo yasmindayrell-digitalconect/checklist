@@ -84,21 +84,10 @@ export default function LoginClient() {
           onSubmit={onSubmit}
           className="w-full rounded-3xl border border-white/10 bg-white/10 p-6 shadow-2xl backdrop-blur-xl"
         >
-          <div className="flex items-center gap-3">
-            <div>
-              <h1 className="text-lg font-semibold tracking-tight text-white">
-                Entrar
-              </h1>
-              <p className="text-sm text-white/60">
-                Acesse com seu <span className="text-white/80">código de cadastro</span> e senha.
-              </p>
-            </div>
-          </div>
-
           <div className="mt-6 space-y-4">
             <div>
               <label htmlFor="cadastro_id" className="block text-sm font-medium text-white/80">
-                Cadastro ID
+                Código
               </label>
               <div
                 className={[
@@ -119,7 +108,6 @@ export default function LoginClient() {
                 />
               </div>
             </div>
-
             <div>
               <label htmlFor="senha" className="block text-sm font-medium text-white/80">
                 Senha
@@ -150,25 +138,22 @@ export default function LoginClient() {
                 {err}
               </div>
             ) : null}
-
-            <button
-              disabled={loading || !cadastroIdClean || !senha}
-              className="mt-1 w-full rounded-2xl px-4 py-2.5 text-[15px] font-semibold text-[#0b0f3a] shadow-lg transition
-                         disabled:cursor-not-allowed disabled:opacity-60
-                         bg-[#80ef80] hover:brightness-95 active:brightness-90"
-            >
-              {loading ? "Entrando..." : "Entrar"}
-            </button>
-
-            <p className="pt-1 text-xs text-white/45">
-              No primeiro acesso, a senha digitada será cadastrada.
-            </p>
+            <div className="flex justify-center">
+              <button
+                disabled={loading || !cadastroIdClean || !senha}
+                className="mt-1 mr-0 w-1/3 rounded-2xl px-4 py-2.5 text-[15px] font-semibold text-[#0b0f3a] shadow-lg transition
+                          disabled:cursor-not-allowed disabled:opacity-60
+                          bg-[#afca0b] hover:brightness-95 active:brightness-90"
+              >
+                {loading ? "Entrando..." : "Entrar"}
+              </button>
+            </div>
           </div>
 
           {/* Rodapé sutil */}
           <div className="mt-6 flex items-center justify-between text-xs text-white/35">
             <span className="inline-flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#80ef80]/80" />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#afca0b]/80" />
               By Digital Conect
             </span>
           </div>
